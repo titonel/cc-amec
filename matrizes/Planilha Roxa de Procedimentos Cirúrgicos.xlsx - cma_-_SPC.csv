@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;
+81;;;;;;;;;;;;;;;;
 cma - PROCEDIMENTOS CIRÚRGICOS DE BAIXA COMPLEXIDADE DE DEZEMBRO DE 2024 - AME CARAGUATATUBA;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;
 PROCEDIMENTO CIRURGIA GERAL;Codigo SUS;Valor Unitario pago/ faturado por procedimento;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;DEZ;TOTAL;MÉDIA/MÊS
@@ -26,7 +26,10 @@ TOTAL EM OFTALMOLOGIA;;;172;155;173;193;163;161;223;225;210;208;168;118;2169;180
 PROCEDIMENTO ORTOPEDIA;Codigo SUS;Valor Unitario pago/ faturado por procedimento;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;DEZ;TOTAL;MÉDIA/MÊS
 DRENAGEM + INFILTRAÇÃO;03.03.09.003-0 ;5,63;63;59;55;55;61;44;58;58;53;45;58;43;652;54,33333333
 EXERESE DE CISTO SEBACEO / NÓDULO / TUMOR;04.01.01.007-4;12,46;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-RESSECÇÃO DE CISTO SINOVIAL / SINOVECTOMIA / PUNÇÃO / INFILTRAÇÃO DE SUBSTANCIAS EM CAVIDADE SINOVIAL;04.08.06.021-2/  04.08.02.030-0 /03.03.09.003-0 ;91,49/ 194,89/ 5,63;0;2;0;1;1;3;1;1;0;1;1;2;13;1,083333333
+RESSECÇÃO DE CISTO SINOVIAL;04.08.06.021-2;91,49;;;;;;;;;;;;;;
+TENOSINOVECTOMIA EM MEMBRO SUPERIOR;04.08.02.030-0;194,89;;;;;;;;;;;;;;
+TENOSINOVECTOMIA EM MEMBRO INFERIOR;04.08.05.037-3;194,89;;;;;;;;;;;;;;
+INFILTRAÇÃO DE SUBSTANCIAS EM CAVIDADE SINOVIAL;03.03.09.003-0 ;5,63;0;2;0;1;1;3;1;1;0;1;1;2;13;1,083333333
 RESSECÇÃO DE CORPO ESTRANHO;04.08.06.032-8 ;139,07;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 TOTAL EM ORTOPEDIA;;;63;61;55;56;62;47;59;59;53;46;59;45;665;55,41666667
 ;;;;;;;;;;;;;;;;
@@ -39,12 +42,12 @@ TOTAL EM UROLOGIA;;;5;6;4;2;1;2;4;2;1;4;2;2;35;2,916666667
 ;;;;;;;;;;;;;;;;
 PROCEDIMENTO DE CIRURGIA PLÁSTICA;Codigo SUS;Valor Unitario pago/ faturado por procedimento;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;DEZ;TOTAL;MÉDIA/MÊS
 Abcesso de mama;04.10.01.001-4;171,51;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-Biópsia com Punch;02.01.01.002-0;14,10;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+Biópsia com Punch;02.01.01.002-0;14,1;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 Biopsia de pele e partes moles;02.01.01.037-2;25,83;1;0;0;0;0;0;0;0;0;1;2;0;4;0,333333333
 Biopsia de unha / Exerese de unha;04.01.02.017-7;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 Calázio / Exerese de tumor de palpebra;04.05.01.007-9;78,75;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 Cantoplastia;04.01.02.017-7;0;1;1;1;0;0;0;1;0;2;1;0;1;8;0,666666667
-Curatico com sedação;04.401.01.001-5;;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+CURATIVO GRAU II C/ OU S/ DEBRIDAMENTO (Curativo com sedação);04.01.01.001-5;;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 Curetagem/retirada de molusco;04.01.01.006-6;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 Exerese de cisto / lipoma / lesão / gânglios;04.01.01.007-4;12,46;1;2;17;21;2;2;3;0;1;5;7;0;61;5,083333333
 Excisão  e/ou sutura simples de pequenas lesões/ ferimentos de pele/ anexo e mucosas;04.16.08.001-4;;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -91,18 +94,3 @@ TOTAL EM CIRURGIA VASCULAR;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 TOTAL GERAL;;;327;316;351;368;324;303;475;454;310;400;360;252;4240;353,3333333
  ;;;;;;;;;;;;;;;;
 TOTAL DE DIAS ÚTEIS POR MÊS;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
