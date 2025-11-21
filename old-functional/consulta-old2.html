@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Produção</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        #search-results {
+            position: absolute; width: 100%; z-index: 50;
+            max-height: 200px; overflow-y: auto;
+            border: 1px solid #e2e8f0; border-top: none;
+        }
+        #search-results div:hover { background-color: #f1f5f9; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
+        .tab-inactive { color: #6b7280; }
+        .prose h1, .prose h2 { font-weight: bold; margin-top: 10px; }
+        .prose ul { list-style-type: disc; margin-left: 20px; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- Navegação -->
+    <nav class="bg-white shadow sticky top-0 z-40">
+        <div class="container mx-auto max-w-5xl p-4 flex space-x-6">
+            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium">REGISTRO</a>
+            <span class="text-blue-600 font-bold border-b-2 border-blue-600">CONSULTA</span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-5xl p-6 mt-4">
+        
+        <!-- Cabeçalho / Busca Global -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">🔍 Selecione o Procedimento</h1>
+            
+            <div class="relative mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Buscar Procedimento</label>
+                <input type="text" id="proc-search" 
+                       class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                       placeholder="Digite para buscar (ex: Hernia)..." autocomplete="off">
+                <div id="search-results" class="bg-white rounded-b-md shadow-lg hidden"></div>
+            </div>
+
+            <!-- Exibição do Procedimento Selecionado -->
+            <div id="selected-info" class="hidden bg-blue-50 p-4 rounded-md border border-blue-200">
+                <p class="text-sm text-blue-600 uppercase font-bold tracking-wide">Procedimento Selecionado</p>
+                <h2 id="display-proc-name" class="text-xl font-bold text-gray-900 mt-1">---</h2>
+                <p id="display-sus-code" class="text-gray-600 text-sm font-mono mt-1">---</p>
+                <input type="hidden" id="hidden-sus-code">
+            </div>
+        </div>
+
+        <!-- Filtros de Especialidade (Visual) -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Especialidade Cirúrgica</label>
+            <select id="especialidade-filter" class="w-full md:w-1/3 px-3 py-2 border rounded-md bg-gray-50">
+                <option value="todas">Todas as Especialidades</option>
+                <option value="geral">Cirurgia Geral</option>
+                <option value="pediatrica">Cirurgia Pediátrica</option>
+                <option value="plastica">Cirurgia Plástica</option>
+                <option value="vascular">Cirurgia Vascular</option>
+            </select>
+            <p class="text-xs text-gray-400 mt-1">*Filtro auxiliar.</p>
+        </div>
+
+        <!-- Abas de Modo de Consulta -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                <li class="mr-2">
+                    <button onclick="switchTab('mensal')" id="tab-mensal" class="inline-block p-4 rounded-t-lg tab-active">
+                        📅 Consulta Mensal (Mês/Ano)
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button onclick="switchTab('historico')" id="tab-historico" class="inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600 hover:border-gray-300">
+                        📈 Série Histórica (Gráfico)
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- CONTEÚDO: CONSULTA MENSAL -->
+        <div id="view-mensal" class="bg-white p-6 rounded-lg shadow min-h-[300px]">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Delimitadores de Período</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-sm text-gray-600">Mês</label>
+                    <select id="mes-pontual" class="w-full border rounded px-3 py-2"></select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Ano</label>
+                    <select id="ano-pontual" class="w-full border rounded px-3 py-2"></select>
+                </div>
+                <button onclick="consultarMensal()" id="btn-mensal" disabled
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-300 transition">
+                    Consultar Produção
+                </button>
+            </div>
+
+            <!-- Resultado Mensal -->
+            <div id="resultado-mensal" class="mt-8 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded border text-center">
+                        <p class="text-gray-500">Quantidade Produzida</p>
+                        <p id="res-qtd" class="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border text-center">
+                        <p class="text-gray-500">Valor Total (Estimado)</p>
+                        <p id="res-valor" class="text-3xl font-bold text-green-600">R$ 0,00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTEÚDO: SÉRIE HISTÓRICA -->
+        <div id="view-historico" class="bg-white p-6 rounded-lg shadow hidden">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Delimitadores de Série</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
+                <div>
+                    <label class="block text-sm text-gray-600">Ano Início</label>
+                    <select id="ano-ini-hist" class="w-full border rounded px-3 py-2"></select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Ano Fim</label>
+                    <select id="ano-fim-hist" class="w-full border rounded px-3 py-2"></select>
+                </div>
+                <button onclick="consultarHistorico()" id="btn-historico" disabled
+                        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-300 transition">
+                    Gerar Gráfico
+                </button>
+            </div>
+
+            <div class="relative h-64 md:h-80 w-full border rounded p-2 bg-gray-50">
+                <canvas id="chartHistorico"></canvas>
+            </div>
+
+            <!-- Botão IA -->
+            <div id="ia-wrapper" class="mt-6 border-t pt-4 hidden">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-purple-700 font-bold text-lg">✨ Análise Inteligente</h4>
+                    <button onclick="analisarIA()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
+                        Gerar Relatório Gemini
+                    </button>
+                </div>
+                <div id="ia-result" class="mt-4 prose bg-purple-50 p-4 rounded text-sm hidden"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DADOS & ELEMENTOS ---
+        const searchInput = document.getElementById('proc-search');
+        const resultsBox = document.getElementById('search-results');
+        const selectedBox = document.getElementById('selected-info');
+        const displayProc = document.getElementById('display-proc-name');
+        const displayCode = document.getElementById('display-sus-code');
+        const hiddenCode = document.getElementById('hidden-sus-code');
+        
+        const btnMensal = document.getElementById('btn-mensal');
+        const btnHistorico = document.getElementById('btn-historico');
+
+        let chartInstance = null;
+        let historicoData = [];
+        let currentProcName = "";
+
+        // --- INICIALIZAÇÃO ---
+        function init() {
+            // Popula Selects
+            const anoAtual = new Date().getFullYear();
+            const anos = [];
+            for(let i=anoAtual+1; i>=2018; i--) anos.push(i);
+            
+            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            
+            const populate = (id, opts) => {
+                const el = document.getElementById(id);
+                el.innerHTML = opts.map(o => `<option value="${o.val}">${o.txt}</option>`).join('');
+            };
+
+            // Meses
+            populate('mes-pontual', meses.map((m, i) => ({val: i+1, txt: m})));
+            // Anos
+            const anosOpts = anos.map(a => ({val: a, txt: a}));
+            populate('ano-pontual', anosOpts);
+            populate('ano-ini-hist', anosOpts);
+            populate('ano-fim-hist', anosOpts);
+            
+            // Seleciona ano atual
+            document.getElementById('ano-pontual').value = anoAtual;
+            document.getElementById('ano-fim-hist').value = anoAtual;
+            document.getElementById('ano-ini-hist').value = 2023;
+        }
+        init();
+
+        // --- NAVEGAÇÃO DE ABAS ---
+        function switchTab(tab) {
+            document.getElementById('view-mensal').classList.add('hidden');
+            document.getElementById('view-historico').classList.add('hidden');
+            document.getElementById('tab-mensal').className = 'inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600 hover:border-gray-300 cursor-pointer';
+            document.getElementById('tab-historico').className = 'inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600 hover:border-gray-300 cursor-pointer';
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = 'inline-block p-4 rounded-t-lg tab-active cursor-pointer';
+        }
+
+        // --- BUSCA ---
+        let timer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(timer);
+            if(e.target.value.length < 3) { resultsBox.classList.add('hidden'); return; }
+            timer = setTimeout(async () => {
+                const res = await fetch(`/api/search_procedimento?term=${e.target.value}`);
+                const data = await res.json();
+                resultsBox.innerHTML = '';
+                data.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = 'p-3 cursor-pointer hover:bg-blue-50 border-b';
+                    d.innerHTML = `<span class="font-bold">${p.nome}</span> <span class="text-xs text-gray-500">(${p.codigo_sus})</span>`;
+                    d.onclick = () => selectProc(p);
+                    resultsBox.appendChild(d);
+                });
+                resultsBox.classList.remove('hidden');
+            }, 300);
+        });
+
+        function selectProc(p) {
+            searchInput.value = '';
+            resultsBox.classList.add('hidden');
+            selectedBox.classList.remove('hidden');
+            
+            displayProc.innerText = p.nome;
+            displayCode.innerText = `Cód: ${p.codigo_sus}`;
+            hiddenCode.value = p.codigo_sus;
+            currentProcName = p.nome;
+
+            btnMensal.disabled = false;
+            btnHistorico.disabled = false;
+        }
+
+        // --- CONSULTA MENSAL ---
+        async function consultarMensal() {
+            const codigo = hiddenCode.value;
+            const mes = document.getElementById('mes-pontual').value;
+            const ano = document.getElementById('ano-pontual').value;
+
+            const res = await fetch(`/api/producao_mensal?codigo_sus=${codigo}&mes=${mes}&ano=${ano}`);
+            const data = await res.json();
+            
+            document.getElementById('resultado-mensal').classList.remove('hidden');
+            if(data.encontrado) {
+                document.getElementById('res-qtd').innerText = data.total;
+                document.getElementById('res-valor').innerText = data.valor_total_produzido.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            } else {
+                document.getElementById('res-qtd').innerText = "0";
+                document.getElementById('res-valor').innerText = "R$ 0,00";
+            }
+        }
+
+        // --- CONSULTA HISTÓRICA ---
+        async function consultarHistorico() {
+            const codigo = hiddenCode.value;
+            const ini = document.getElementById('ano-ini-hist').value;
+            const fim = document.getElementById('ano-fim-hist').value;
+
+            const res = await fetch(`/api/historico?codigo_sus=${codigo}&ano_inicio=${ini}&ano_fim=${fim}`);
+            const json = await res.json();
+            historicoData = json.data;
+
+            if(chartInstance) chartInstance.destroy();
+            
+            const ctx = document.getElementById('chartHistorico').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: historicoData.map(d => `${d.mes}/${d.ano}`),
+                    datasets: [{
+                        label: 'Produção',
+                        data: historicoData.map(d => d.total_producao),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Habilita IA se tiver dados
+            if(historicoData.length > 0) document.getElementById('ia-wrapper').classList.remove('hidden');
+            else document.getElementById('ia-wrapper').classList.add('hidden');
+        }
+
+        // --- IA ---
+        async function analisarIA() {
+            const div = document.getElementById('ia-result');
+            div.innerHTML = "Analisando com Gemini...";
+            div.classList.remove('hidden');
+            
+            const res = await fetch('/api/analise_ia', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ historico: historicoData, proc_name: currentProcName })
+            });
+            const data = await res.json();
+            div.innerHTML = marked.parse(data.markdown || data.error);
+        }
+    </script>
+</body>
+</html>

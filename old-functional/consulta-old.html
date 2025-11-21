@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Produção Cirúrgica</title>
+    <!-- Carrega o Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carrega a biblioteca Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        /* Estilo para o container de resultados da busca */
+        #search-results {
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+        }
+        #search-results div:hover {
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- Navegação Simples -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto max-w-5xl p-4 flex justify-start space-x-4">
+            <a href="/" class="text-gray-600 hover:text-blue-600 pb-1">REGISTRO</a>
+            <span class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1">CONSULTA</span>
+        </div>
+    </nav>
+    <!-- Fim Navegação -->
+
+    <div class="container mx-auto max-w-5xl p-6 bg-white shadow-lg rounded-lg mt-5">
+        
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">
+            Consulta de Produção Cirúrgica
+        </h1>
+
+        <!-- Filtros de Consulta -->
+        <div class="bg-gray-50 p-4 rounded-md shadow-inner mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Filtros (Série Histórica)</h2>
+
+            <form id="consulta-form" class="space-y-4">
+                
+                <!-- Filtro de Procedimento (Busca) -->
+                <div class="relative">
+                    <label for="procedimento-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar Procedimento (para filtro de Especialidade)
+                    </label>
+                    <input type="text" id="procedimento-search"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Digite o nome do procedimento para filtrar a série..."
+                           autocomplete="off">
+                    <div id="search-results" class="bg-white rounded-b-md shadow-lg"></div>
+                    
+                    <input type="hidden" id="codigo-sus-hidden">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Ano Inicial -->
+                    <div>
+                        <label for="ano-inicio" class="block text-sm font-medium text-gray-700 mb-1">
+                            Ano de Início
+                        </label>
+                        <select id="ano-inicio" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <!-- População via JS -->
+                        </select>
+                    </div>
+
+                    <!-- Ano Final -->
+                    <div>
+                        <label for="ano-fim" class="block text-sm font-medium text-gray-700 mb-1">
+                            Ano Final
+                        </label>
+                        <select id="ano-fim" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <!-- População via JS -->
+                        </select>
+                    </div>
+
+                    <!-- Botão de Consulta -->
+                    <div class="flex items-end pt-2 md:pt-0">
+                        <button type="submit" id="consultar-button"
+                                class="w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400">
+                            Consultar Histórico
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Área de Gráfico -->
+        <div class="pt-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3" id="chart-title">Produção Cirúrgica: Selecione um Procedimento</h2>
+            <div class="bg-white p-4 rounded-md shadow border">
+                <canvas id="producaoChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Área para Consulta por Mês/Ano (Simplificada) -->
+        <div class="mt-8 pt-4 border-t">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Produção Detalhada por Período</h2>
+            <div id="resultado-detalhado" class="p-3 bg-blue-50 text-blue-800 rounded-md">
+                Selecione um procedimento e consulte o histórico para ver o resumo.
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="text-center text-gray-500 text-sm mt-6 pb-6">
+        Sistema de Consulta de Produção v1.0
+    </footer>
+
+    <script>
+        // --- Seletores e Variáveis ---
+        const procSearchInput = document.getElementById('procedimento-search');
+        const searchResultsContainer = document.getElementById('search-results');
+        const codigoSusHidden = document.getElementById('codigo-sus-hidden');
+        const anoInicioSelect = document.getElementById('ano-inicio');
+        const anoFimSelect = document.getElementById('ano-fim');
+        const consultarButton = document.getElementById('consultar-button');
+        const chartTitle = document.getElementById('chart-title');
+        const resultadoDetalhado = document.getElementById('resultado-detalhado');
+        const form = document.getElementById('consulta-form');
+
+        let producaoChart = null; // Instância do Chart.js
+        let searchTimeout;
+        let selectedProcedimento = null; // Guarda o procedimento selecionado para a consulta
+
+        const mesesMap = {
+            1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun",
+            7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"
+        };
+
+        // --- Funções Auxiliares ---
+
+        /**
+         * Popula os dropdowns de Ano de Início e Fim.
+         */
+        function popularDropdownsAno() {
+            const anoAtual = new Date().getFullYear();
+            const anos = [];
+            for (let i = anoAtual + 1; i >= 2018; i--) { // Range de anos ajustável
+                anos.push(i);
+            }
+
+            anoInicioSelect.innerHTML = anos.map(a => `<option value="${a}" ${a === 2019 ? 'selected' : ''}>${a}</option>`).join('');
+            anoFimSelect.innerHTML = anos.map(a => `<option value="${a}" ${a === anoAtual ? 'selected' : ''}>${a}</option>`).join('');
+        }
+        
+        /**
+         * Cria ou atualiza o gráfico de linhas.
+         */
+        function renderChart(data, nomeProcedimento) {
+            const ctx = document.getElementById('producaoChart').getContext('2d');
+            
+            // Mapeia os dados para rótulos e valores do gráfico
+            const labels = data.map(item => `${mesesMap[item.mes]}/${item.ano}`);
+            const producoes = data.map(item => item.total_producao);
+
+            if (producaoChart) {
+                // Destrói a instância anterior se existir
+                producaoChart.destroy();
+            }
+
+            // Define o título e a descrição da consulta
+            chartTitle.textContent = `Série Histórica: ${nomeProcedimento}`;
+            resultadoDetalhado.innerHTML = `Total de Registros Encontrados: ${data.length} meses.<br>
+                                            *O gráfico exibe a quantidade total produzida em cada mês/ano.*`;
+
+            producaoChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Produção Cirúrgica (Quantidade)',
+                        data: producoes,
+                        borderColor: '#3b82f6', // blue-500
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        fill: true,
+                        tension: 0.1,
+                        pointBackgroundColor: '#1d4ed8' // blue-700
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Produção: ${context.parsed.y} un.`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade Produzida'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Período (Mês/Ano)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Lógica Principal de Consulta ---
+
+        /**
+         * Lida com a seleção de um procedimento da lista de busca.
+         */
+        function handleSelectProcedimento(proc) {
+            selectedProcedimento = proc;
+            procSearchInput.value = proc.nome;
+            codigoSusHidden.value = proc.codigo_sus;
+            searchResultsContainer.innerHTML = ''; // Limpa resultados
+            searchResultsContainer.classList.add('hidden'); // Esconde container
+            
+            // Atualiza o título provisoriamente
+            chartTitle.textContent = `Produção Cirúrgica: ${proc.nome}`;
+            consultarButton.disabled = false;
+        }
+
+        /**
+         * Busca procedimentos na API (mesma lógica do index.html).
+         */
+        async function fetchProcedimentos(term) {
+            if (term.length < 3) {
+                searchResultsContainer.innerHTML = '';
+                searchResultsContainer.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search_procedimento?term=${encodeURIComponent(term)}`);
+                if (!response.ok) return;
+
+                const procedimentos = await response.json();
+                
+                searchResultsContainer.innerHTML = '';
+                if (procedimentos.length === 0) {
+                    searchResultsContainer.innerHTML = `<div class="p-3 text-gray-500">Nenhum procedimento encontrado.</div>`;
+                } else {
+                    procedimentos.forEach(proc => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 cursor-pointer hover:bg-gray-100 text-sm';
+                        div.textContent = `${proc.nome} (${proc.codigo_sus})`;
+                        div.onclick = () => handleSelectProcedimento(proc);
+                        searchResultsContainer.appendChild(div);
+                    });
+                }
+                searchResultsContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erro ao buscar procedimentos:", error);
+            }
+        }
+
+        /**
+         * Busca a série histórica e plota o gráfico.
+         */
+        async function fetchHistorico(event) {
+            event.preventDefault();
+
+            const codigo_sus = codigoSusHidden.value;
+            const ano_inicio = anoInicioSelect.value;
+            const ano_fim = anoFimSelect.value;
+            
+            if (!codigo_sus) {
+                resultadoDetalhado.className = 'p-3 bg-red-100 text-red-800 rounded-md';
+                resultadoDetalhado.innerHTML = 'Por favor, selecione um procedimento na busca acima.';
+                return;
+            }
+
+            if (parseInt(ano_inicio) > parseInt(ano_fim)) {
+                resultadoDetalhado.className = 'p-3 bg-yellow-100 text-yellow-800 rounded-md';
+                resultadoDetalhado.innerHTML = 'O Ano de Início não pode ser maior que o Ano Final.';
+                return;
+            }
+
+            consultarButton.disabled = true;
+            consultarButton.textContent = 'Buscando...';
+            resultadoDetalhado.className = 'p-3 bg-gray-200 text-gray-700 rounded-md';
+            resultadoDetalhado.innerHTML = 'Carregando dados...';
+
+            try {
+                const queryParams = new URLSearchParams({
+                    codigo_sus: codigo_sus,
+                    ano_inicio: ano_inicio,
+                    ano_fim: ano_fim
+                }).toString();
+
+                const response = await fetch(`/api/historico?${queryParams}`);
+                const result = await response.json();
+
+                if (response.ok && result.data && result.data.length > 0) {
+                    renderChart(result.data, selectedProcedimento.nome);
+                } else if (result.data && result.data.length === 0) {
+                    // Limpa o gráfico se houver um
+                    if (producaoChart) producaoChart.destroy();
+                    chartTitle.textContent = `Série Histórica: ${selectedProcedimento.nome}`;
+                    resultadoDetalhado.className = 'p-3 bg-yellow-100 text-yellow-800 rounded-md';
+                    resultadoDetalhado.innerHTML = 'Nenhum registro de produção encontrado para o período/procedimento selecionado.';
+                } else {
+                    // Erro da API
+                    if (producaoChart) producaoChart.destroy();
+                    chartTitle.textContent = `Série Histórica: Erro`;
+                    resultadoDetalhado.className = 'p-3 bg-red-100 text-red-800 rounded-md';
+                    resultadoDetalhado.innerHTML = `Erro na consulta: ${result.message}`;
+                }
+
+            } catch (error) {
+                console.error("Erro ao buscar histórico:", error);
+                if (producaoChart) producaoChart.destroy();
+                chartTitle.textContent = `Série Histórica: Erro de Conexão`;
+                resultadoDetalhado.className = 'p-3 bg-red-100 text-red-800 rounded-md';
+                resultadoDetalhado.innerHTML = 'Erro de conexão com o servidor. Tente novamente.';
+            } finally {
+                consultarButton.disabled = false;
+                consultarButton.textContent = 'Consultar Histórico';
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Input de Busca (com debounce de 300ms)
+        procSearchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const term = e.target.value;
+            // Limpa o estado se o usuário apagar
+            if (term.length === 0) {
+                selectedProcedimento = null;
+                codigoSusHidden.value = '';
+                consultarButton.disabled = true;
+                chartTitle.textContent = 'Produção Cirúrgica: Selecione um Procedimento';
+            }
+            searchTimeout = setTimeout(() => {
+                fetchProcedimentos(term);
+            }, 300);
+        });
+
+        // Clique fora da busca para fechar os resultados
+        document.addEventListener('click', (e) => {
+            if (!procSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+                searchResultsContainer.classList.add('hidden');
+            }
+        });
+
+        // Envio do Formulário de Consulta
+        form.addEventListener('submit', fetchHistorico);
+
+        // --- Inicialização ---
+        popularDropdownsAno();
+        consultarButton.disabled = true; // Inicia desabilitado até selecionar o procedimento
+    </script>
+</body>
+</html>

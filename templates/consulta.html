@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Produção</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        #search-results {
+            position: absolute; width: 100%; z-index: 50;
+            max-height: 300px; overflow-y: auto;
+            border: 1px solid #e2e8f0; border-top: none;
+        }
+        #search-results div:hover { background-color: #f1f5f9; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
+        .tab-inactive { color: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <nav class="bg-white shadow sticky top-0 z-40">
+        <div class="container mx-auto max-w-5xl p-4 flex space-x-6">
+            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
+            <span class="text-blue-600 font-bold border-b-2 border-blue-600">CONSULTA</span>
+            <a href="/medicos" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">MÉDICOS</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-5xl p-6 mt-4">
+        
+        <!-- Busca -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">🔍 Consulta de Produção</h1>
+            
+            <div class="relative mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Buscar Procedimento</label>
+                <input type="text" id="proc-search" 
+                       class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                       placeholder="Digite nome ou código SIGTAP..." autocomplete="off">
+                <div id="search-results" class="bg-white rounded-b-md shadow-lg hidden"></div>
+            </div>
+
+            <!-- Detalhes do Selecionado -->
+            <div id="selected-info" class="hidden bg-blue-50 p-4 rounded-md border border-blue-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <p class="text-xs text-blue-600 uppercase font-bold">Procedimento</p>
+                    <h2 id="display-proc-name" class="text-xl font-bold text-gray-900">---</h2>
+                    <p id="display-sigtap-code" class="text-gray-600 text-sm font-mono">---</p>
+                </div>
+                <div>
+                    <p class="text-xs text-blue-600 uppercase font-bold">Especialidade</p>
+                    <p id="display-esp" class="font-medium text-gray-800">---</p>
+                </div>
+                <div>
+                    <p class="text-xs text-blue-600 uppercase font-bold">Tipo de Cirurgia</p>
+                    <p id="display-tipo" class="font-medium text-gray-800">---</p>
+                </div>
+                <input type="hidden" id="hidden-sigtap-code">
+            </div>
+        </div>
+
+        <!-- Abas -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                <li class="mr-2">
+                    <button onclick="switchTab('mensal')" id="tab-mensal" class="inline-block p-4 rounded-t-lg tab-active">
+                        📅 Produção Mensal
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button onclick="switchTab('historico')" id="tab-historico" class="inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600">
+                        📈 Gráfico Anual
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- VIEW MENSAL -->
+        <div id="view-mensal" class="bg-white p-6 rounded-lg shadow min-h-[200px]">
+            <div class="flex items-end gap-4 mb-6">
+                <div class="w-1/2">
+                    <label class="block text-sm text-gray-600">Selecione o Mês</label>
+                    <select id="mes-pontual" class="w-full border rounded px-3 py-2"></select>
+                </div>
+                <button onclick="consultarMensal()" id="btn-mensal" disabled
+                        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-300 transition">
+                    Consultar
+                </button>
+            </div>
+
+            <div id="resultado-mensal" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-6 rounded border text-center">
+                    <p class="text-gray-500 text-sm uppercase tracking-wide">Quantidade</p>
+                    <p id="res-qtd" class="text-4xl font-bold text-blue-600 mt-2">0</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded border text-center">
+                    <p class="text-gray-500 text-sm uppercase tracking-wide">Valor Estimado</p>
+                    <p id="res-valor" class="text-4xl font-bold text-green-600 mt-2">R$ 0,00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW HISTÓRICO -->
+        <div id="view-historico" class="bg-white p-6 rounded-lg shadow hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-700">Produção Anual (Jan - Dez)</h3>
+                <button onclick="consultarHistorico()" id="btn-historico" disabled
+                        class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 disabled:bg-gray-300">
+                    Atualizar Gráfico
+                </button>
+            </div>
+
+            <div class="relative h-72 w-full border rounded p-2 bg-gray-50">
+                <canvas id="chartHistorico"></canvas>
+            </div>
+
+            <!-- IA -->
+            <div id="ia-wrapper" class="mt-6 border-t pt-4 hidden">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-purple-700 font-bold flex items-center gap-2">
+                        ✨ Análise Inteligente
+                    </h4>
+                    <button onclick="analisarIA()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm transition transform hover:scale-105 shadow">
+                        Gerar Relatório Gemini
+                    </button>
+                </div>
+                <div id="ia-result" class="mt-4 prose bg-purple-50 p-6 rounded-lg text-sm border border-purple-100 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('proc-search');
+        const resultsBox = document.getElementById('search-results');
+        const selectedBox = document.getElementById('selected-info');
+        
+        const displayProc = document.getElementById('display-proc-name');
+        const displayCode = document.getElementById('display-sigtap-code');
+        const displayEsp = document.getElementById('display-esp');
+        const displayTipo = document.getElementById('display-tipo');
+        const hiddenCode = document.getElementById('hidden-sigtap-code');
+        
+        const btnMensal = document.getElementById('btn-mensal');
+        const btnHistorico = document.getElementById('btn-historico');
+
+        let chartInstance = null;
+        let historicoData = [];
+        let currentProcName = "";
+
+        // Inicialização
+        (function init() {
+            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            const elMes = document.getElementById('mes-pontual');
+            elMes.innerHTML = meses.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+        })();
+
+        function switchTab(tab) {
+            document.getElementById('view-mensal').classList.add('hidden');
+            document.getElementById('view-historico').classList.add('hidden');
+            document.getElementById('tab-mensal').className = 'inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600 cursor-pointer';
+            document.getElementById('tab-historico').className = 'inline-block p-4 rounded-t-lg tab-inactive hover:text-gray-600 cursor-pointer';
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = 'inline-block p-4 rounded-t-lg tab-active cursor-pointer';
+        }
+
+        // Busca Dinâmica
+        let timer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(timer);
+            if(e.target.value.length < 3) { resultsBox.classList.add('hidden'); return; }
+            
+            timer = setTimeout(async () => {
+                const res = await fetch(`/api/search_procedimento?term=${e.target.value}`);
+                const data = await res.json();
+                resultsBox.innerHTML = '';
+                
+                if(data.length === 0) {
+                    resultsBox.innerHTML = '<div class="p-3 text-gray-500">Nenhum resultado.</div>';
+                } else {
+                    data.forEach(p => {
+                        const d = document.createElement('div');
+                        d.className = 'p-3 cursor-pointer hover:bg-blue-50 border-b text-sm grid grid-cols-1';
+                        d.innerHTML = `
+                            <span class="font-bold text-gray-800">${p.nome}</span>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>SIGTAP: ${p.codigo_sigtap}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 rounded">${p.nome_especialidade}</span>
+                            </div>
+                        `;
+                        d.onclick = () => selectProc(p);
+                        resultsBox.appendChild(d);
+                    });
+                }
+                resultsBox.classList.remove('hidden');
+            }, 300);
+        });
+
+        function selectProc(p) {
+            searchInput.value = '';
+            resultsBox.classList.add('hidden');
+            selectedBox.classList.remove('hidden');
+            
+            displayProc.innerText = p.nome;
+            displayCode.innerText = p.codigo_sigtap;
+            displayEsp.innerText = p.nome_especialidade;
+            displayTipo.innerText = p.tipo_cirurgia;
+            
+            hiddenCode.value = p.codigo_sigtap; // Armazena o código SIGTAP
+            currentProcName = p.nome;
+
+            btnMensal.disabled = false;
+            btnHistorico.disabled = false;
+            
+            document.getElementById('resultado-mensal').classList.add('hidden');
+            if(chartInstance) chartInstance.destroy();
+            document.getElementById('ia-wrapper').classList.add('hidden');
+        }
+
+        // Consultas usando SIGTAP
+        async function consultarMensal() {
+            const codigo = hiddenCode.value;
+            const mes = document.getElementById('mes-pontual').value;
+            
+            const res = await fetch(`/api/producao_mensal?codigo_sigtap=${codigo}&mes=${mes}`);
+            const data = await res.json();
+            
+            document.getElementById('resultado-mensal').classList.remove('hidden');
+            if(data.encontrado) {
+                document.getElementById('res-qtd').innerText = data.total;
+                document.getElementById('res-valor').innerText = data.valor_total_produzido.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            } else {
+                document.getElementById('res-qtd').innerText = "0";
+                document.getElementById('res-valor').innerText = "R$ 0,00";
+            }
+        }
+
+        async function consultarHistorico() {
+            const codigo = hiddenCode.value;
+            const res = await fetch(`/api/historico?codigo_sigtap=${codigo}`);
+            const json = await res.json();
+            historicoData = json.data;
+
+            if(chartInstance) chartInstance.destroy();
+            
+            const ctx = document.getElementById('chartHistorico').getContext('2d');
+            const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Produção 2024',
+                        data: historicoData.map(d => d.total_producao),
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            if(historicoData.length > 0) document.getElementById('ia-wrapper').classList.remove('hidden');
+        }
+
+        async function analisarIA() {
+            const div = document.getElementById('ia-result');
+            div.innerHTML = '<div class="animate-pulse text-purple-600">Consultando o Gemini... 🧠</div>';
+            div.classList.remove('hidden');
+            
+            const res = await fetch('/api/analise_ia', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ historico: historicoData, proc_name: currentProcName })
+            });
+            const data = await res.json();
+            div.innerHTML = marked.parse(data.markdown || data.error);
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-PROCEDIMENTO CIRURGICO;Codigo SIGTAP;Tipo;Especialidade;Valor Unitario pago/ faturado por procedimento;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;DEZ;TOTAL;MÉDIA/MÊS
+procedimento;codigo_sigtap;Tipo;Especialidade;valor_sigtap;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;DEZ;TOTAL;MÉDIA/MÊS
 BIOPSIA DE PELE;02.01.01.037-2;2;Cirurgia Geral;25,83;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 CANTOPLASTIA - CIRURGIA DE UNHA;04.01.02.017-7;2;Cirurgia Geral;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 DRENAGEM DE ABSCESSO;04.01.01.003-1;2;Cirurgia Geral;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0

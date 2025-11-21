@@ -4,68 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Produção Cirúrgica</title>
-    <!-- Carrega o Tailwind CSS via CDN para estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilo para o container de resultados da busca */
         #search-results {
-            position: absolute;
-            width: 100%;
-            z-index: 10;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-            border-top: none;
+            position: absolute; width: 100%; z-index: 10;
+            max-height: 300px; overflow-y: auto;
+            border: 1px solid #e2e8f0; border-top: none;
         }
-        #search-results div:hover {
-            background-color: #f1f5f9;
-        }
-        /* Esconde a barra de rolagem padrão do input number */
+        #search-results div:hover { background-color: #f1f5f9; }
         input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <div class="container mx-auto max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-10">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto max-w-3xl p-4 flex justify-start space-x-6">
+            <a href="/" class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1 transition-colors">PRODUÇÃO</a>
+            <a href="/consulta" class="text-gray-500 hover:text-blue-600 font-medium pb-1 transition-colors">CONSULTA</a>
+            <a href="/medicos" class="text-gray-500 hover:text-blue-600 font-medium pb-1 transition-colors">MÉDICOS</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-8">
         
         <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">
-            Registro de Produção Cirúrgica
+            Lançamento de Produção
         </h1>
 
-        <!-- Mensagens de feedback (sucesso ou erro) -->
-        <div id="message-box" class="hidden p-4 rounded-md mb-4 text-white"></div>
+        <div id="message-box" class="hidden p-4 rounded-md mb-4 text-white text-center font-medium shadow"></div>
 
-        <!-- Formulário de Inserção -->
         <form id="producao-form" class="space-y-6">
 
-            <!-- Seção do Procedimento com Busca -->
+            <!-- Busca -->
             <div class="relative">
                 <label for="procedimento-search" class="block text-sm font-medium text-gray-700 mb-1">
                     Buscar Procedimento (digite 3+ letras)
                 </label>
-                <input type="text" id="procedimento-search"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Ex: Herniorrafia..."
-                       autocomplete="off">
-                <!-- Container onde os resultados da busca aparecerão -->
-                <div id="search-results" class="bg-white rounded-b-md shadow-lg"></div>
+                <div class="relative">
+                    <input type="text" id="procedimento-search"
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-shadow"
+                           placeholder="Ex: Herniorrafia..."
+                           autocomplete="off">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <div id="search-results" class="bg-white rounded-b-md shadow-lg hidden"></div>
             </div>
 
-            <!-- Campos auto-preenchidos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Campos Automáticos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-md border border-gray-200">
                 <div>
-                    <label for="codigo-sus" class="block text-sm font-medium text-gray-700 mb-1">
-                        Código SUS
+                    <label for="codigo-sigtap" class="block text-sm font-medium text-gray-700 mb-1">
+                        Código SIGTAP
                     </label>
-                    <input type="text" id="codigo-sus"
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                    <input type="text" id="codigo-sigtap"
+                           class="w-full px-4 py-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm text-gray-600 cursor-not-allowed"
                            readonly>
                 </div>
                 <div>
@@ -73,59 +71,52 @@
                         Valor SIGTAP (R$)
                     </label>
                     <input type="text" id="valor-sigtap"
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                           class="w-full px-4 py-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm text-gray-600 cursor-not-allowed"
                            readonly>
                 </div>
             </div>
 
-            <!-- Seção de Data e Quantidade -->
+            <!-- Detalhes Adicionais -->
+            <div id="extra-info" class="hidden grid grid-cols-2 gap-4 text-sm text-gray-600 px-4">
+                <div><span class="font-bold">Tipo:</span> <span id="info-tipo">---</span></div>
+                <div><span class="font-bold">Especialidade:</span> <span id="info-esp">---</span></div>
+            </div>
+
+            <!-- Dados de Entrada -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label for="mes" class="block text-sm font-medium text-gray-700 mb-1">
-                        Mês
-                    </label>
-                    <select id="mes" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <label for="mes" class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
+                    <select id="mes" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 bg-white">
                         <option value="">Selecione...</option>
-                        <!-- Os meses serão populados por JS -->
                     </select>
                 </div>
                 <div>
-                    <label for="ano" class="block text-sm font-medium text-gray-700 mb-1">
-                        Ano
-                    </label>
-                    <select id="ano" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <!-- Os anos serão populados por JS -->
-                    </select>
+                    <label for="ano" class="block text-sm font-medium text-gray-700 mb-1">Ano</label>
+                    <select id="ano" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 bg-white"></select>
                 </div>
                 <div>
-                    <label for="quantidade" class="block text-sm font-medium text-gray-700 mb-1">
-                        Quantidade
-                    </label>
+                    <label for="quantidade" class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
                     <input type="number" id="quantidade" min="1"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500"
                            placeholder="0">
                 </div>
             </div>
 
-            <!-- Botão de Envio -->
-            <div class="text-right pt-4">
+            <div class="text-right pt-4 border-t mt-6">
                 <button type="submit" id="submit-button"
-                        class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400">
+                        class="inline-flex justify-center w-full md:w-auto py-3 px-8 border border-transparent shadow-md text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all">
                     Registrar Produção
                 </button>
             </div>
         </form>
     </div>
 
-    <footer class="text-center text-gray-500 text-sm mt-6 pb-6">
-        Sistema de Registro de Produção v1.0
-    </footer>
+    <footer class="text-center text-gray-500 text-sm mt-8 pb-6">Sistema de Produção v2.3</footer>
 
     <script>
-        // --- Seletores de Elementos do DOM ---
         const procSearchInput = document.getElementById('procedimento-search');
         const searchResultsContainer = document.getElementById('search-results');
-        const codigoSusInput = document.getElementById('codigo-sus');
+        const codigoSigtapInput = document.getElementById('codigo-sigtap'); 
         const valorSigtapInput = document.getElementById('valor-sigtap');
         const mesSelect = document.getElementById('mes');
         const anoSelect = document.getElementById('ano');
@@ -133,231 +124,163 @@
         const form = document.getElementById('producao-form');
         const submitButton = document.getElementById('submit-button');
         const messageBox = document.getElementById('message-box');
+        
+        const extraInfo = document.getElementById('extra-info');
+        const infoTipo = document.getElementById('info-tipo');
+        const infoEsp = document.getElementById('info-esp');
 
-        // --- Variáveis de Estado ---
-        let selectedProcedimento = null; // Guarda o objeto do procedimento selecionado
+        let selectedProcedimento = null;
         let searchTimeout;
 
-        // --- Funções Auxiliares ---
-
-        /**
-         * Formata um número como moeda BRL (ex: 123.4 -> 123,40)
-         */
         function formatCurrency(value) {
             if (value === null || value === undefined) return '';
-            return parseFloat(value).toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            return parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        /**
-         * Popula os dropdowns de Mês e Ano
-         */
         function popularDropdownsData() {
-            // Popula Meses
-            const meses = [
-                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-            ];
+            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             mesSelect.innerHTML = '<option value="">Selecione o Mês...</option>';
             meses.forEach((mes, index) => {
                 mesSelect.innerHTML += `<option value="${index + 1}">${mes}</option>`;
             });
-
-            // Popula Anos (Ano atual +/- 2 anos)
             const anoAtual = new Date().getFullYear();
             anoSelect.innerHTML = '';
-            for (let i = anoAtual + 1; i >= anoAtual - 3; i--) {
+            for (let i = anoAtual + 1; i >= 2020; i--) {
                 const selected = (i === anoAtual) ? 'selected' : '';
                 anoSelect.innerHTML += `<option value="${i}" ${selected}>${i}</option>`;
             }
         }
 
-        /**
-         * Reseta os campos do formulário para o estado inicial
-         */
         function resetForm() {
             procSearchInput.value = '';
-            codigoSusInput.value = '';
+            codigoSigtapInput.value = '';
             valorSigtapInput.value = '';
             mesSelect.value = '';
             quantidadeInput.value = '';
+            extraInfo.classList.add('hidden');
             selectedProcedimento = null;
-            // Deixa o ano selecionado (geralmente o atual)
         }
 
-        /**
-         * Mostra uma mensagem de feedback (erro ou sucesso)
-         */
         function showMessage(type, text) {
             messageBox.innerHTML = text;
-            if (type === 'success') {
-                messageBox.className = 'p-4 rounded-md mb-4 text-white bg-green-500';
-            } else {
-                messageBox.className = 'p-4 rounded-md mb-4 text-white bg-red-500';
-            }
+            messageBox.className = type === 'success' 
+                ? 'p-4 rounded-md mb-4 text-white text-center font-medium shadow bg-green-500'
+                : 'p-4 rounded-md mb-4 text-white text-center font-medium shadow bg-red-500';
             messageBox.classList.remove('hidden');
-            
-            // Esconde a mensagem após 5 segundos
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 5000);
+            setTimeout(() => messageBox.classList.add('hidden'), 5000);
         }
 
-        // --- Lógica Principal ---
-
-        /**
-         * Lida com a seleção de um procedimento da lista de busca
-         */
         function handleSelectProcedimento(proc) {
             selectedProcedimento = proc;
             procSearchInput.value = proc.nome;
-            codigoSusInput.value = proc.codigo_sus;
+            codigoSigtapInput.value = proc.codigo_sigtap; 
             valorSigtapInput.value = formatCurrency(proc.valor_sigtap);
-            searchResultsContainer.innerHTML = ''; // Limpa resultados
-            searchResultsContainer.classList.add('hidden'); // Esconde container
+            
+            if(proc.tipo_cirurgia || proc.nome_especialidade){
+                infoTipo.textContent = proc.tipo_cirurgia || '-';
+                infoEsp.textContent = proc.nome_especialidade || '-';
+                extraInfo.classList.remove('hidden');
+            }
+
+            searchResultsContainer.innerHTML = '';
+            searchResultsContainer.classList.add('hidden');
         }
 
-        /**
-         * Busca procedimentos na API com base no input do usuário
-         */
         async function fetchProcedimentos(term) {
             if (term.length < 3) {
                 searchResultsContainer.innerHTML = '';
                 searchResultsContainer.classList.add('hidden');
                 return;
             }
-
             try {
                 const response = await fetch(`/api/search_procedimento?term=${encodeURIComponent(term)}`);
                 if (!response.ok) return;
-
                 const procedimentos = await response.json();
                 
-                searchResultsContainer.innerHTML = ''; // Limpa resultados antigos
+                searchResultsContainer.innerHTML = '';
                 if (procedimentos.length === 0) {
-                    searchResultsContainer.innerHTML = `<div class="p-3 text-gray-500">Nenhum procedimento encontrado.</div>`;
+                    searchResultsContainer.innerHTML = `<div class="p-3 text-gray-500 italic">Nenhum procedimento encontrado.</div>`;
                 } else {
                     procedimentos.forEach(proc => {
                         const div = document.createElement('div');
-                        div.className = 'p-3 cursor-pointer hover:bg-gray-100';
-                        div.textContent = proc.nome;
+                        div.className = 'p-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 text-sm text-gray-700';
+                        div.innerHTML = `<strong>${proc.nome}</strong> <span class="text-gray-400 text-xs block">${proc.codigo_sigtap}</span>`;
                         div.onclick = () => handleSelectProcedimento(proc);
                         searchResultsContainer.appendChild(div);
                     });
                 }
-                searchResultsContainer.classList.remove('hidden'); // Mostra container
-
-            } catch (error) {
-                console.error("Erro ao buscar procedimentos:", error);
-                searchResultsContainer.innerHTML = `<div class="p-3 text-red-500">Erro ao buscar.</div>`;
                 searchResultsContainer.classList.remove('hidden');
+            } catch (error) {
+                console.error("Erro busca:", error);
             }
         }
 
-        /**
-         * Lida com o envio do formulário
-         */
         async function handleSubmit(event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
+            event.preventDefault();
             
-            // Validação
-            if (!selectedProcedimento || codigoSusInput.value !== selectedProcedimento.codigo_sus) {
-                showMessage('error', 'Erro: Procedimento inválido. Por favor, selecione um da lista de busca.');
+            if (!selectedProcedimento || codigoSigtapInput.value !== selectedProcedimento.codigo_sigtap) {
+                showMessage('error', 'Erro: Procedimento inválido. Selecione na lista.');
                 return;
             }
             if (!mesSelect.value || !anoSelect.value || !quantidadeInput.value || quantidadeInput.value <= 0) {
-                showMessage('error', 'Erro: Todos os campos (Mês, Ano, Quantidade) são obrigatórios.');
+                showMessage('error', 'Erro: Preencha todos os campos.');
                 return;
             }
 
-            // Confirmação do usuário
-            // Usamos window.confirm() pois estamos no contexto de um aplicativo web
-            const confirmMessage = `
-                Confirma o registro?
-                ---------------------------
-                Procedimento: ${selectedProcedimento.nome}
-                Código: ${selectedProcedimento.codigo_sus}
-                Período: ${mesSelect.value}/${anoSelect.value}
-                Quantidade: ${quantidadeInput.value}
-            `;
-            
-            if (!confirm(confirmMessage)) {
-                return; // Usuário cancelou
-            }
+            const confirmMessage = `Confirma?\n\n${selectedProcedimento.nome}\nQtd: ${quantidadeInput.value} em ${mesSelect.options[mesSelect.selectedIndex].text}/${anoSelect.value}`;
+            if (!confirm(confirmMessage)) return;
 
-            // Prepara os dados para envio
             const payload = {
-                codigo_sus: selectedProcedimento.codigo_sus,
+                codigo_sigtap: selectedProcedimento.codigo_sigtap,
                 ano: parseInt(anoSelect.value),
                 mes: parseInt(mesSelect.value),
                 quantidade: parseInt(quantidadeInput.value)
             };
 
-            // Desabilita o botão para evitar cliques duplos
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
 
             try {
                 const response = await fetch('/api/submit_producao', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    showMessage('success', 'Sucesso! Produção registrada.');
-                    resetForm(); // Limpa o formulário após o sucesso
+                    showMessage('success', '✅ Produção atualizada com sucesso!');
+                    resetForm();
                 } else {
-                    showMessage('error', `Falha no registro: ${result.message || 'Erro desconhecido.'}`);
+                    showMessage('error', `❌ Erro: ${result.message}`);
                 }
-
             } catch (error) {
-                console.error("Erro ao enviar formulário:", error);
-                showMessage('error', 'Erro de conexão. Tente novamente.');
+                showMessage('error', '❌ Erro de conexão.');
             } finally {
-                // Reabilita o botão
                 submitButton.disabled = false;
                 submitButton.textContent = 'Registrar Produção';
             }
         }
 
-        // --- Event Listeners ---
-
-        // Input de Busca (com debounce de 300ms)
         procSearchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const term = e.target.value;
-            // Se o usuário apagar o input, limpa o resto
             if (term.length === 0) {
-                codigoSusInput.value = '';
-                valorSigtapInput.value = '';
-                selectedProcedimento = null;
+                resetForm();
+                searchResultsContainer.classList.add('hidden');
+            } else {
+                searchTimeout = setTimeout(() => fetchProcedimentos(term), 300);
             }
-            searchTimeout = setTimeout(() => {
-                fetchProcedimentos(term);
-            }, 300);
         });
 
-        // Clique fora da busca para fechar os resultados
         document.addEventListener('click', (e) => {
             if (!procSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
                 searchResultsContainer.classList.add('hidden');
             }
         });
 
-        // Envio do Formulário
         form.addEventListener('submit', handleSubmit);
-
-        // --- Inicialização ---
-        // Popula os dropdowns quando a página carrega
         popularDropdownsData();
-
     </script>
 </body>
 </html>
