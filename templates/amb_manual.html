@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Manual - Ambulatorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto max-w-3xl">
+            <a href="/ambulatorial" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar para Menu
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-2xl p-8 mt-6">
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Carregar Arquivo SIRESP</h2>
+            
+            <form id="upload-form" class="space-y-6">
+                
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-sm text-yellow-700">
+                    <p>Use o arquivo original baixado do SIRESP. O sistema aceita formatos <strong>.XLS</strong>, <strong>.XLSX</strong> e <strong>.CSV</strong>. <br>A data será extraída automaticamente da célula F3.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mês de Referência</label>
+                        <select id="mes_ref" class="w-full border rounded px-3 py-2 bg-white" required>
+                            <option value="">Selecione...</option>
+                            <option value="Janeiro">Janeiro</option>
+                            <option value="Fevereiro">Fevereiro</option>
+                            <option value="Março">Março</option>
+                            <option value="Abril">Abril</option>
+                            <option value="Maio">Maio</option>
+                            <option value="Junho">Junho</option>
+                            <option value="Julho">Julho</option>
+                            <option value="Agosto">Agosto</option>
+                            <option value="Setembro">Setembro</option>
+                            <option value="Outubro">Outubro</option>
+                            <option value="Novembro">Novembro</option>
+                            <option value="Dezembro">Dezembro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ano de Referência</label>
+                        <select id="ano_ref" class="w-full border rounded px-3 py-2 bg-white" required>
+                            <option value="">Selecione...</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Arquivo (XLS, XLSX ou CSV)</label>
+                    <input type="file" id="file-upload" accept=".xls,.xlsx,.csv" class="w-full border rounded p-2" required>
+                </div>
+
+                <div id="status-msg" class="hidden p-3 rounded text-sm font-bold text-center"></div>
+
+                <button type="submit" id="btn-enviar" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Enviar Arquivo
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const btn = document.getElementById('btn-enviar');
+        const statusDiv = document.getElementById('status-msg');
+        const mesSel = document.getElementById('mes_ref');
+        const anoSel = document.getElementById('ano_ref');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if(!mesSel.value || !anoSel.value) {
+                alert("Por favor, informe o Mês e Ano de referência para prosseguir.");
+                return;
+            }
+
+            const fileInput = document.getElementById('file-upload');
+            if(fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('mes_usuario', mesSel.value); 
+            formData.append('ano_usuario', anoSel.value);
+
+            btn.disabled = true;
+            btn.textContent = "Processando...";
+            statusDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch('/ambulatorial/manual', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                statusDiv.classList.remove('hidden');
+                if(data.success) {
+                    statusDiv.className = 'p-3 rounded text-sm font-bold text-center bg-green-100 text-green-700';
+                    statusDiv.innerText = data.message;
+                    form.reset();
+                } else {
+                    statusDiv.className = 'p-3 rounded text-sm font-bold text-center bg-red-100 text-red-700';
+                    statusDiv.innerText = "Erro: " + data.message;
+                }
+            } catch (err) {
+                statusDiv.classList.remove('hidden');
+                statusDiv.className = 'p-3 rounded text-sm font-bold text-center bg-red-100 text-red-700';
+                statusDiv.innerText = "Erro de conexão.";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Enviar Arquivo";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,15 +1,23 @@
 import sqlite3
 import json
 import os
-import requests 
-from flask import Flask, request, jsonify, render_template
+import requests
+import pandas as pd
+from datetime import datetime
+from werkzeug.utils import secure_filename
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# Garante que a pasta de uploads existe
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 DB_PRODUCAO = 'producao_cirurgica.db'
 DB_MEDICOS = 'medicos.db'
-GEMINI_API_KEY = "AIzaSyA9waj93Js4b8n9aoUtHQcbvWExalaiFG4" 
+DB_AMB = 'amb.db'
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 
 COLUNAS_MESES = {
     1: 'jan', 2: 'fev', 3: 'mar', 4: 'abr', 5: 'mai', 6: 'jun',
@@ -24,6 +32,11 @@ def get_producao_conn():
 
 def get_medicos_conn():
     conn = sqlite3.connect(DB_MEDICOS)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_amb_conn():
+    conn = sqlite3.connect(DB_AMB)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -45,27 +58,172 @@ def get_auxiliary_maps():
     conn.close()
     return mapa_esp, mapa_tipo
 
-# --- ROTAS DE PÁGINAS (MODIFICADO) ---
+# --- ROTAS PRINCIPAIS ---
 
 @app.route('/')
 def index():
-    """Nova Landing Page (Menu Principal)"""
     return render_template('index.html')
 
 @app.route('/producao')
-def producao():
-    """Antiga página inicial, agora dedicada ao lançamento de produção"""
+def producao_index():
+    return render_template('producao_index.html')
+
+@app.route('/producao/cirurgica')
+def producao_cirurgica():
     return render_template('producao.html')
+
+@app.route('/medicos')
+def medicos_index():
+    return render_template('medicos_index.html')
+
+@app.route('/medicos/cadastro')
+def medicos_cadastro():
+    return render_template('medicos.html')
 
 @app.route('/consulta')
 def consulta():
     return render_template('consulta.html')
 
-@app.route('/medicos')
-def medicos():
-    return render_template('medicos.html')
+# --- ROTAS AMBULATORIAL ---
 
-# --- API PRODUÇÃO ---
+@app.route('/ambulatorial')
+def ambulatorial_index():
+    return render_template('ambulatorial_index.html')
+
+@app.route('/ambulatorial/robo')
+def ambulatorial_robo():
+    return render_template('amb_robo.html')
+
+@app.route('/ambulatorial/manual', methods=['GET', 'POST'])
+def ambulatorial_manual():
+    """Página de Upload Manual (Lógica Fixa: Header Linha 5, Dados Linha 7)"""
+    if request.method == 'GET':
+        return render_template('amb_manual.html')
+    
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'Arquivo não selecionado'})
+
+    try:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        ext = filename.rsplit('.', 1)[1].lower()
+        
+        # 1. LER METADADOS (Primeiras 5 linhas para achar F3)
+        df_meta = None
+        try:
+            if ext == 'csv':
+                try: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=';', encoding='latin1')
+                except: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=',', encoding='latin1')
+            else:
+                try: df_meta = pd.read_excel(filepath, header=None, nrows=5)
+                except: 
+                    dfs = pd.read_html(filepath, decimal=',', thousands='.', header=None)
+                    df_meta = dfs[0].iloc[:5]
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Erro ao ler metadados: {str(e)}'})
+
+        # Extrair Mês/Ano (F3 -> Linha 2, Coluna 5)
+        try:
+            celula_f3 = ""
+            if df_meta.shape[1] > 5:
+                celula_f3 = str(df_meta.iloc[2, 5]).strip()
+            else:
+                # Fallback: varre primeiras células
+                for c in range(df_meta.shape[1]):
+                    val = str(df_meta.iloc[2, c])
+                    if " de " in val and any(char.isdigit() for char in val):
+                        celula_f3 = val; break
+
+            if " de " not in celula_f3:
+                 return jsonify({'success': False, 'message': f'Não foi possível ler Data na célula F3. Valor lido: "{celula_f3}".'})
+
+            partes = celula_f3.lower().split(' de ')
+            mes_arquivo = partes[0].capitalize()
+            ano_arquivo = int(partes[1])
+        except Exception as e:
+             return jsonify({'success': False, 'message': f'Erro ao processar data da célula F3: {str(e)}'})
+
+        # 2. LER DADOS (Cabeçalho na Linha 5 -> header=4)
+        try:
+            if ext == 'csv':
+                try: df_dados = pd.read_csv(filepath, header=4, sep=';', encoding='latin1')
+                except: df_dados = pd.read_csv(filepath, header=4, sep=',', encoding='latin1')
+            else:
+                try: df_dados = pd.read_excel(filepath, header=4)
+                except: 
+                    dfs = pd.read_html(filepath, decimal=',', thousands='.', header=4)
+                    df_dados = dfs[0]
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Erro ao ler tabela de dados: {str(e)}'})
+
+        # 3. MAPEAR POR POSIÇÃO (A, B, C, D fixos)
+        # Pega apenas as 4 primeiras colunas, independente do nome
+        if df_dados.shape[1] < 4:
+            return jsonify({'success': False, 'message': f'Arquivo tem menos de 4 colunas. Encontradas: {df_dados.shape[1]}'})
+
+        df_trabalho = df_dados.iloc[:, :4].copy()
+        df_trabalho.columns = ['especialidade', 'oferta', 'agendado', 'realizado']
+
+        # 4. LIMPEZA (Remover linha em branco e totais)
+        # A linha 6 do Excel (primeira linha de dados do DF) deve ser vazia segundo a regra.
+        # Removemos ela e quaisquer outras vazias.
+        df_trabalho = df_trabalho.dropna(how='all')
+
+        # 5. INSERÇÃO NO BANCO
+        conn = get_amb_conn()
+        cursor = conn.cursor()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        usuario = 'bot'
+
+        registros = 0
+        for _, row in df_trabalho.iterrows():
+            esp = str(row['especialidade']).strip()
+            
+            # Pula cabeçalho repetido, linha vazia ou linha de Total
+            if not esp or esp.lower() in ['nan', 'total', 'especialidade', 'none']: continue
+            
+            # Verifica se "Especialidade" acabou vindo como dado (caso a linha 6 não estivesse vazia)
+            if esp.lower() == 'especialidade': continue 
+
+            def safe_int(val):
+                try:
+                    if pd.isna(val) or str(val).strip() == '': return 0
+                    val_str = str(val).replace('.', '').replace(',', '.')
+                    return int(float(val_str))
+                except: return 0
+
+            oferta = safe_int(row['oferta'])
+            agendado = safe_int(row['agendado'])
+            realizado = safe_int(row['realizado'])
+
+            cursor.execute("""
+                INSERT INTO producao_amb (especialidade, oferta, agendado, realizado, mes, ano, usuario, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (esp, oferta, agendado, realizado, mes_arquivo, ano_arquivo, usuario, timestamp))
+            registros += 1
+
+        conn.commit()
+        conn.close()
+        
+        try: os.remove(filepath)
+        except: pass
+
+        return jsonify({
+            'success': True, 
+            'message': f'Sucesso! {registros} registros importados de {mes_arquivo}/{ano_arquivo}.'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro crítico: {str(e)}'})
+
+# --- DEMAIS ROTAS (MANTIDAS) ---
+
 @app.route('/api/search_procedimento')
 def search_procedimento():
     term = request.args.get('term', '')
@@ -151,15 +309,13 @@ def get_historico():
 
 @app.route('/api/analise_ia', methods=['POST'])
 def analise_ia():
-    if not GEMINI_API_KEY: return jsonify({'error': 'Sem chave'}), 500
+    if not GEMINI_API_KEY: return jsonify({'error': 'Sem chave API configurada'}), 500
     data = request.get_json()
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={GEMINI_API_KEY}"
         res = requests.post(url, json={"contents": [{"parts": [{"text": f"Analise: {data}"}]}]})
         return jsonify({'markdown': res.json()['candidates'][0]['content']['parts'][0]['text']})
     except Exception as e: return jsonify({'error': str(e)}), 500
-
-# --- API: MÉDICOS ---
 
 @app.route('/api/medicos', methods=['GET'])
 def get_medicos():
@@ -213,6 +369,13 @@ def update_medico(id):
         return jsonify({'success': True, 'message': 'Atualizado!'})
     except Exception as e: return jsonify({'success': False, 'message': str(e)}), 500
     finally: conn.close()
+
+@app.route('/api/siresp/sync', methods=['POST'])
+def siresp_sync():
+    def generate():
+        yield json.dumps({"status": "info", "message": "Iniciando robô..."}) + "\n"
+        yield json.dumps({"status": "success", "message": "Finalizado."}) + "\n"
+    return app.response_class(generate(), mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
