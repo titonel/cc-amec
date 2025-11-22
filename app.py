@@ -45,15 +45,25 @@ def get_auxiliary_maps():
     conn.close()
     return mapa_esp, mapa_tipo
 
-# --- ROTAS ---
+# --- ROTAS DE PÁGINAS (MODIFICADO) ---
+
 @app.route('/')
-def index(): return render_template('index.html')
+def index():
+    """Nova Landing Page (Menu Principal)"""
+    return render_template('index.html')
+
+@app.route('/producao')
+def producao():
+    """Antiga página inicial, agora dedicada ao lançamento de produção"""
+    return render_template('producao.html')
 
 @app.route('/consulta')
-def consulta(): return render_template('consulta.html')
+def consulta():
+    return render_template('consulta.html')
 
 @app.route('/medicos')
-def medicos(): return render_template('medicos.html')
+def medicos():
+    return render_template('medicos.html')
 
 # --- API PRODUÇÃO ---
 @app.route('/api/search_procedimento')
@@ -162,13 +172,11 @@ def get_medicos():
     except Exception as e: return jsonify({'error': str(e)}), 500
     finally: conn.close()
 
-# NOVA ROTA: Lista Especialidades AMEC
 @app.route('/api/especialidades_amec', methods=['GET'])
 def get_especialidades_amec():
     conn = get_medicos_conn()
     try:
         cursor = conn.cursor()
-        # Retorna apenas os nomes, ordenados
         cursor.execute("SELECT especialidade FROM especialidades_amec ORDER BY especialidade ASC")
         lista = [row['especialidade'] for row in cursor.fetchall()]
         return jsonify(lista)

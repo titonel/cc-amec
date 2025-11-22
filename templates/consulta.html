@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Produção</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js](https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
     <style>
         #search-results {
             position: absolute; width: 100%; z-index: 50;
@@ -20,10 +20,17 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <nav class="bg-white shadow sticky top-0 z-40">
-        <div class="container mx-auto max-w-5xl p-4 flex space-x-6">
-            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
-            <span class="text-blue-600 font-bold border-b-2 border-blue-600">CONSULTA</span>
+    <!-- Navbar Atualizada -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto max-w-3xl p-4 flex justify-start items-center space-x-6">
+            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
+                <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                INÍCIO
+            </a>
+            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
+            <span class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1">CONSULTA</span>
             <a href="/medicos" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">MÉDICOS</a>
         </div>
     </nav>
