@@ -13,6 +13,11 @@ EXPORT_CONFIG = [
         'arquivo': 'medicos.csv'
     },
     {
+        'db': 'medicos.db',
+        'tabela': 'especialidades_amec',
+        'arquivo': 'especialidades-amec.csv'
+    },
+    {
         'db': 'producao_cirurgica.db',
         'tabela': 'producao',
         'arquivo': 'producao_cirurgica.csv'

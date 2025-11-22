@@ -10,11 +10,10 @@
         .toggle-active:checked { right: 0; border-color: #10B981; }
         .toggle-active:checked + .label-active { background-color: #10B981; }
         
-        /* Toggle Sexo (Azul para Masculino / Rosa para Feminino) */
-        /* Lógica invertida visualmente: 0 (M) esquerda/azul, 1 (F) direita/rosa */
-        .toggle-sexo:checked { right: 0; border-color: #ec4899; /* pink-500 */ }
+        /* Toggle Sexo (Azul/Rosa) */
+        .toggle-sexo:checked { right: 0; border-color: #ec4899; }
         .toggle-sexo:checked + .label-sexo { background-color: #ec4899; }
-        .toggle-sexo:not(:checked) + .label-sexo { background-color: #3b82f6; /* blue-500 */ }
+        .toggle-sexo:not(:checked) + .label-sexo { background-color: #3b82f6; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -41,7 +40,7 @@
                 <h2 class="text-xl font-semibold text-gray-700" id="form-title">Novo Médico</h2>
                 
                 <div class="flex gap-6">
-                    <!-- Toggle SEXO -->
+                    <!-- Sexo -->
                     <div class="flex items-center">
                         <label class="mr-3 text-sm font-medium text-gray-700 w-20 text-right" id="sexo-label">Masculino</label>
                         <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -50,7 +49,7 @@
                         </div>
                     </div>
 
-                    <!-- Toggle ATIVO -->
+                    <!-- Ativo -->
                     <div class="flex items-center">
                         <label for="ativo" class="mr-3 text-sm font-medium text-gray-700">Ativo?</label>
                         <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -103,10 +102,58 @@
                     </div>
                 </div>
 
+                <!-- Nacionalidade e Naturalidade -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">País de Nacionalidade</label>
+                        <input type="text" id="nacionalidade" class="w-full border rounded px-3 py-2 focus:ring-blue-500" placeholder="Ex: Brasil">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Naturalidade (Cidade)</label>
+                        <input type="text" id="naturalidade" class="w-full border rounded px-3 py-2 focus:ring-blue-500" placeholder="Ex: São Paulo">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">UF Naturalidade</label>
+                        <select id="estado_natural" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
+                            <option value="">UF</option>
+                            <option value="AC">AC</option>
+                            <option value="AL">AL</option>
+                            <option value="AP">AP</option>
+                            <option value="AM">AM</option>
+                            <option value="BA">BA</option>
+                            <option value="CE">CE</option>
+                            <option value="DF">DF</option>
+                            <option value="ES">ES</option>
+                            <option value="GO">GO</option>
+                            <option value="MA">MA</option>
+                            <option value="MT">MT</option>
+                            <option value="MS">MS</option>
+                            <option value="MG">MG</option>
+                            <option value="PA">PA</option>
+                            <option value="PB">PB</option>
+                            <option value="PR">PR</option>
+                            <option value="PE">PE</option>
+                            <option value="PI">PI</option>
+                            <option value="RJ">RJ</option>
+                            <option value="RN">RN</option>
+                            <option value="RS">RS</option>
+                            <option value="RO">RO</option>
+                            <option value="RR">RR</option>
+                            <option value="SC">SC</option>
+                            <option value="SP">SP</option>
+                            <option value="SE">SE</option>
+                            <option value="TO">TO</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Especialidade</label>
-                        <input type="text" id="especialidade" class="w-full border rounded px-3 py-2 focus:ring-blue-500">
+                        <!-- MODIFICADO: Select populado dinamicamente -->
+                        <select id="especialidade" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Email</label>
@@ -120,11 +167,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">DDD</label>
-                            <input type="text" id="tel_ddd" class="w-full border rounded px-3 py-2">
+                            <input type="text" id="tel_ddd" class="w-full border rounded px-3 py-2 focus:ring-blue-500" maxlength="2" placeholder="XX">
                         </div>
                         <div class="md:col-span-3">
                             <label class="block text-sm font-medium text-gray-700">Celular</label>
-                            <input type="text" id="tel_cel" class="w-full border rounded px-3 py-2">
+                            <input type="text" id="tel_cel" class="w-full border rounded px-3 py-2 focus:ring-blue-500" maxlength="10" pattern="\d{5}-\d{4}" title="Formato obrigatório: 99999-9999" placeholder="99999-9999">
                         </div>
                     </div>
                     
@@ -167,13 +214,37 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Estado (UF)</label>
-                            <input type="text" id="estado_res" class="w-full border rounded px-3 py-2 bg-gray-50" maxlength="2">
+                            <select id="estado_res" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
+                                <option value="">UF</option>
+                                <option value="AC">AC</option>
+                                <option value="AL">AL</option>
+                                <option value="AP">AP</option>
+                                <option value="AM">AM</option>
+                                <option value="BA">BA</option>
+                                <option value="CE">CE</option>
+                                <option value="DF">DF</option>
+                                <option value="ES">ES</option>
+                                <option value="GO">GO</option>
+                                <option value="MA">MA</option>
+                                <option value="MT">MT</option>
+                                <option value="MS">MS</option>
+                                <option value="MG">MG</option>
+                                <option value="PA">PA</option>
+                                <option value="PB">PB</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="PI">PI</option>
+                                <option value="RJ">RJ</option>
+                                <option value="RN">RN</option>
+                                <option value="RS">RS</option>
+                                <option value="RO">RO</option>
+                                <option value="RR">RR</option>
+                                <option value="SC">SC</option>
+                                <option value="SP">SP</option>
+                                <option value="SE">SE</option>
+                                <option value="TO">TO</option>
+                            </select>
                         </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 hidden">
-                        <input type="text" id="nacionalidade" class="border rounded px-3 py-2 text-sm">
-                        <input type="text" id="naturalidade" class="border rounded px-3 py-2 text-sm">
                     </div>
                 </div>
 
@@ -209,18 +280,32 @@
         const sexoToggle = document.getElementById('sexo');
         const sexoLabel = document.getElementById('sexo-label');
         
-        const textFields = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'inicio_ativ', 'fim_ativ'];
+        const dddInput = document.getElementById('tel_ddd');
+        const celInput = document.getElementById('tel_cel');
+        
+        const textFields = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'estado_natural', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'inicio_ativ', 'fim_ativ'];
+
+        // --- INICIALIZAÇÃO: Carrega especialidades ---
+        async function carregarEspecialidades() {
+            const sel = document.getElementById('especialidade');
+            try {
+                const res = await fetch('/api/especialidades_amec');
+                const list = await res.json();
+                if (list.length > 0) {
+                    sel.innerHTML = '<option value="">Selecione...</option>' + 
+                        list.map(e => `<option value="${e}">${e}</option>`).join('');
+                }
+            } catch (e) { console.error("Erro ao carregar especialidades", e); }
+        }
+        carregarEspecialidades();
 
         function novoMedico() {
             form.reset();
             document.getElementById('medico-id').value = '';
             document.getElementById('form-title').innerText = 'Novo Médico';
             document.getElementById('ativo').checked = true;
-            
-            // Reset Sexo
-            sexoToggle.checked = false;
+            sexoToggle.checked = false; 
             updateSexoLabel();
-            
             formContainer.classList.remove('hidden');
             formContainer.scrollIntoView({ behavior: 'smooth' });
         }
@@ -230,7 +315,6 @@
             form.reset();
         }
 
-        // Atualiza label do sexo visualmente
         function updateSexoLabel() {
             if(sexoToggle.checked) {
                 sexoLabel.textContent = "Feminino";
@@ -242,12 +326,19 @@
         }
         sexoToggle.addEventListener('change', updateSexoLabel);
 
-        // --- CEP ---
-        cepInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 8) value = value.slice(0, 8);
-            if (value.length > 5) value = value.slice(0, 5) + '-' + value.slice(5);
-            e.target.value = value;
+        // Validações
+        dddInput.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 2); });
+        celInput.addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 9) val = val.slice(0, 9);
+            if (val.length > 5) val = val.slice(0, 5) + '-' + val.slice(5);
+            e.target.value = val;
+        });
+        cepInput.addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 8) val = val.slice(0, 8);
+            if (val.length > 5) val = val.slice(0, 5) + '-' + val.slice(5);
+            e.target.value = val;
         });
 
         cepInput.addEventListener('blur', async (e) => {
@@ -255,7 +346,6 @@
             if (cep.length !== 8) return;
             cepStatus.classList.remove('hidden');
             cepStatus.textContent = "Buscando...";
-            
             try {
                 const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                 const data = await res.json();
@@ -263,12 +353,10 @@
                     document.getElementById('end_res').value = data.logradouro;
                     document.getElementById('bairro_res').value = data.bairro;
                     document.getElementById('cidade_res').value = data.localidade;
-                    document.getElementById('estado_res').value = data.uf;
+                    if (data.uf) document.getElementById('estado_res').value = data.uf;
                     document.getElementById('num_res').focus();
                     cepStatus.classList.add('hidden');
-                } else {
-                    cepStatus.textContent = "Não encontrado.";
-                }
+                } else { cepStatus.textContent = "Não encontrado."; }
             } catch { cepStatus.textContent = "Erro."; }
         });
 
@@ -279,9 +367,9 @@
                 const isAtivo = m.ativo == '1' || m.ativo === 1;
                 const badge = isAtivo ? '<span class="px-2 text-xs font-semibold rounded-full bg-green-100 text-green-800">Ativo</span>' : '<span class="px-2 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inativo</span>';
                 return `
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4">${badge}</td>
-                    <td class="px-6 py-4 font-medium">${m.nome}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900">${m.nome}</td>
                     <td class="px-6 py-4 text-gray-600">${m.crm}</td>
                     <td class="px-6 py-4 text-gray-600">${m.especialidade || '-'}</td>
                     <td class="px-6 py-4 text-right text-sm"><button onclick='editarMedico(${JSON.stringify(m)})' class="text-indigo-600 hover:text-indigo-900 font-bold">Editar</button></td>
@@ -297,11 +385,8 @@
                 if(el) el.value = m[f] || '';
             });
             document.getElementById('ativo').checked = (m.ativo == '1' || m.ativo === 1);
-            
-            // Carregar Sexo
             sexoToggle.checked = (m.sexo == '1' || m.sexo === 1);
             updateSexoLabel();
-
             formContainer.classList.remove('hidden');
             formContainer.scrollIntoView({ behavior: 'smooth' });
         }
@@ -312,7 +397,7 @@
             const payload = {};
             textFields.forEach(f => payload[f] = document.getElementById(f).value);
             payload['ativo'] = document.getElementById('ativo').checked ? '1' : '0';
-            payload['sexo'] = sexoToggle.checked ? '1' : '0'; // 1=F, 0=M
+            payload['sexo'] = sexoToggle.checked ? '1' : '0';
 
             const url = id ? `/api/medicos/${id}` : '/api/medicos';
             const method = id ? 'PUT' : 'POST';

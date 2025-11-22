@@ -5,6 +5,8 @@ import requests
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False 
+
 DB_PRODUCAO = 'producao_cirurgica.db'
 DB_MEDICOS = 'medicos.db'
 GEMINI_API_KEY = "AIzaSyA9waj93Js4b8n9aoUtHQcbvWExalaiFG4" 
@@ -160,13 +162,25 @@ def get_medicos():
     except Exception as e: return jsonify({'error': str(e)}), 500
     finally: conn.close()
 
+# NOVA ROTA: Lista Especialidades AMEC
+@app.route('/api/especialidades_amec', methods=['GET'])
+def get_especialidades_amec():
+    conn = get_medicos_conn()
+    try:
+        cursor = conn.cursor()
+        # Retorna apenas os nomes, ordenados
+        cursor.execute("SELECT especialidade FROM especialidades_amec ORDER BY especialidade ASC")
+        lista = [row['especialidade'] for row in cursor.fetchall()]
+        return jsonify(lista)
+    except Exception as e: return jsonify([]), 500
+    finally: conn.close()
+
 @app.route('/api/medicos', methods=['POST'])
 def add_medico():
     data = request.get_json()
     conn = get_medicos_conn()
     try:
-        # ADICIONADO: 'sexo'
-        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
+        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'estado_natural', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
         vals = [data.get(c, '') for c in cols]
         placeholders = ', '.join(['?'] * len(cols))
         cursor = conn.cursor()
@@ -181,8 +195,7 @@ def update_medico(id):
     data = request.get_json()
     conn = get_medicos_conn()
     try:
-        # ADICIONADO: 'sexo'
-        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
+        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'estado_natural', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
         updates = ', '.join([f"{c} = ?" for c in cols])
         vals = [data.get(c, '') for c in cols]
         vals.append(id)
