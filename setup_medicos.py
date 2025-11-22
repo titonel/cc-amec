@@ -13,7 +13,7 @@ COLUNAS_ESPERADAS = [
     'nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 
     'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 
     'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res',
-    'ativo', 'inicio_ativ', 'fim_ativ'  # Novos campos
+    'ativo', 'inicio_ativ', 'fim_ativ', 'sexo'  # Novo campo sexo
 ]
 
 def get_db_conn():
@@ -51,19 +51,18 @@ def configurar_banco():
     
     df = carregar_csv_medicos()
     if df.empty:
-        return
+        # Cria DataFrame vazio com colunas se não houver CSV
+        df = pd.DataFrame(columns=COLUNAS_ESPERADAS)
 
     # 1. Normalização de Colunas
     colunas_atuais = list(df.columns)
     
     print("Tentando identificar colunas pelo nome...")
-    # Normaliza os nomes atuais para tentar casar
     novo_mapa = {}
     
     for col in df.columns:
         col_norm = normalizar_texto(col)
         
-        # Heurísticas de mapeamento
         match = None
         if 'nome' in col_norm: match = 'nome'
         elif 'crm' in col_norm: match = 'crm'
@@ -83,10 +82,10 @@ def configurar_banco():
         elif 'bairro' in col_norm: match = 'bairro_res'
         elif 'cidade' in col_norm: match = 'cidade_res'
         elif 'estado' in col_norm or 'uf' in col_norm: match = 'estado_res'
-        # Novos campos (caso já existam no CSV)
         elif 'inicio' in col_norm: match = 'inicio_ativ'
         elif 'fim' in col_norm: match = 'fim_ativ'
         elif 'ativo' in col_norm: match = 'ativo'
+        elif 'sexo' in col_norm or 'genero' in col_norm: match = 'sexo'
         
         if match:
             novo_mapa[col] = match
@@ -95,46 +94,40 @@ def configurar_banco():
         df = df.rename(columns=novo_mapa)
     
     # 2. Adicionar colunas faltantes com valores padrão
-    # Se 'ativo' não existe, assume 1 (Sim)
     if 'ativo' not in df.columns:
-        print("Adicionando coluna padrão 'ativo' = 1")
         df['ativo'] = '1'
-    
-    # Se datas não existem, assume vazio
+    if 'sexo' not in df.columns:
+        df['sexo'] = '0' # Default Masculino se não especificado
     if 'inicio_ativ' not in df.columns:
         df['inicio_ativ'] = ''
     if 'fim_ativ' not in df.columns:
         df['fim_ativ'] = ''
 
-    # Garante que o DataFrame final tenha TODAS as colunas esperadas e APENAS elas
-    # Preenche qualquer outra coluna faltante com vazio
+    # Garante estrutura final
     for col in COLUNAS_ESPERADAS:
         if col not in df.columns:
             df[col] = ''
             
     df = df[COLUNAS_ESPERADAS]
 
-    # 3. Limpeza de Dados
+    # 3. Limpeza
     df = df.fillna('')
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    # 4. Criação da Tabela e Inserção
+    # 4. Recria Tabela
     conn = get_db_conn()
     cursor = conn.cursor()
-    
-    # Recria a tabela
     cursor.execute("DROP TABLE IF EXISTS medicos")
     
-    # Monta o CREATE TABLE
     cols_sql = ", ".join([f"{c} TEXT" for c in COLUNAS_ESPERADAS])
     sql_create = f"CREATE TABLE medicos (id INTEGER PRIMARY KEY AUTOINCREMENT, {cols_sql})"
     cursor.execute(sql_create)
     
     try:
         df.to_sql('medicos', conn, if_exists='append', index=False)
-        print(f"Sucesso! {len(df)} médicos importados para 'medicos.db'.")
+        print(f"Sucesso! {len(df)} médicos importados.")
     except Exception as e:
-        print(f"Erro ao inserir dados no banco: {e}")
+        print(f"Erro SQL: {e}")
 
     conn.commit()
     conn.close()

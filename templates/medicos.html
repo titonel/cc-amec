@@ -6,19 +6,19 @@
     <title>Gestão de Médicos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos para o Toggle Switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #10B981; /* green-500 */
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #10B981; /* green-500 */
-        }
+        /* Toggle Ativo (Verde) */
+        .toggle-active:checked { right: 0; border-color: #10B981; }
+        .toggle-active:checked + .label-active { background-color: #10B981; }
+        
+        /* Toggle Sexo (Azul para Masculino / Rosa para Feminino) */
+        /* Lógica invertida visualmente: 0 (M) esquerda/azul, 1 (F) direita/rosa */
+        .toggle-sexo:checked { right: 0; border-color: #ec4899; /* pink-500 */ }
+        .toggle-sexo:checked + .label-sexo { background-color: #ec4899; }
+        .toggle-sexo:not(:checked) + .label-sexo { background-color: #3b82f6; /* blue-500 */ }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <!-- Navegação -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto max-w-6xl p-4 flex space-x-6 overflow-x-auto">
             <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
@@ -36,17 +36,27 @@
             </button>
         </div>
 
-        <!-- Formulário -->
         <div id="form-container" class="bg-white p-6 rounded-lg shadow mb-8 hidden border-l-4 border-blue-500">
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex flex-wrap justify-between items-start mb-6 gap-4">
                 <h2 class="text-xl font-semibold text-gray-700" id="form-title">Novo Médico</h2>
                 
-                <!-- Campo ATIVO (Toggle) -->
-                <div class="flex items-center">
-                    <label for="ativo" class="mr-3 text-sm font-medium text-gray-700">Cadastro Ativo?</label>
-                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="ativo" id="ativo" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300 right-6 top-0 border-gray-300"/>
-                        <label for="ativo" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-all duration-300"></label>
+                <div class="flex gap-6">
+                    <!-- Toggle SEXO -->
+                    <div class="flex items-center">
+                        <label class="mr-3 text-sm font-medium text-gray-700 w-20 text-right" id="sexo-label">Masculino</label>
+                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="sexo" id="sexo" class="toggle-sexo absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300 right-6 top-0 border-gray-300"/>
+                            <label for="sexo" class="toggle-label label-sexo block overflow-hidden h-6 rounded-full cursor-pointer transition-all duration-300"></label>
+                        </div>
+                    </div>
+
+                    <!-- Toggle ATIVO -->
+                    <div class="flex items-center">
+                        <label for="ativo" class="mr-3 text-sm font-medium text-gray-700">Ativo?</label>
+                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="ativo" id="ativo" class="toggle-checkbox toggle-active absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300 right-6 top-0 border-gray-300"/>
+                            <label for="ativo" class="toggle-label label-active block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-all duration-300"></label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,7 +64,7 @@
             <form id="medico-form" class="space-y-4">
                 <input type="hidden" id="medico-id">
                 
-                <!-- Seção de Atividade -->
+                <!-- Atividade -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-md border border-blue-100 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Início de Atividade</label>
@@ -104,7 +114,7 @@
                     </div>
                 </div>
 
-                <!-- Contato e Endereço (Collapsible opcional) -->
+                <!-- Endereço -->
                 <div class="border-t pt-4 mt-2">
                     <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Endereço e Contato</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -119,13 +129,19 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        <div>
+                        <div class="relative">
                             <label class="block text-sm font-medium text-gray-700">CEP</label>
-                            <input type="text" id="cep_res" class="w-full border rounded px-3 py-2">
+                            <input type="text" id="cep_res" class="w-full border rounded px-3 py-2 pr-8 focus:ring-blue-500" placeholder="00000-000" maxlength="9" pattern="\d{5}-\d{3}">
+                            <div class="absolute bottom-2 right-2 text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <p id="cep-status" class="text-xs text-blue-600 mt-1 hidden">Buscando...</p>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">Endereço</label>
-                            <input type="text" id="end_res" class="w-full border rounded px-3 py-2">
+                            <label class="block text-sm font-medium text-gray-700">Endereço (Logradouro)</label>
+                            <input type="text" id="end_res" class="w-full border rounded px-3 py-2 bg-gray-50">
                         </div>
                     </div>
 
@@ -140,18 +156,18 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Bairro</label>
-                            <input type="text" id="bairro_res" class="w-full border rounded px-3 py-2">
+                            <input type="text" id="bairro_res" class="w-full border rounded px-3 py-2 bg-gray-50">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Cidade</label>
-                            <input type="text" id="cidade_res" class="w-full border rounded px-3 py-2">
+                            <input type="text" id="cidade_res" class="w-full border rounded px-3 py-2 bg-gray-50">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Estado (UF)</label>
-                            <input type="text" id="estado_res" class="w-full border rounded px-3 py-2" maxlength="2">
+                            <input type="text" id="estado_res" class="w-full border rounded px-3 py-2 bg-gray-50" maxlength="2">
                         </div>
                     </div>
                     
@@ -168,7 +184,6 @@
             </form>
         </div>
 
-        <!-- Lista -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -189,15 +204,22 @@
         const formContainer = document.getElementById('form-container');
         const form = document.getElementById('medico-form');
         const lista = document.getElementById('lista-medicos');
+        const cepInput = document.getElementById('cep_res');
+        const cepStatus = document.getElementById('cep-status');
+        const sexoToggle = document.getElementById('sexo');
+        const sexoLabel = document.getElementById('sexo-label');
         
-        // Campos de texto (Excluindo ativo que é checkbox)
         const textFields = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'inicio_ativ', 'fim_ativ'];
 
         function novoMedico() {
             form.reset();
             document.getElementById('medico-id').value = '';
             document.getElementById('form-title').innerText = 'Novo Médico';
-            document.getElementById('ativo').checked = true; // Default ativo
+            document.getElementById('ativo').checked = true;
+            
+            // Reset Sexo
+            sexoToggle.checked = false;
+            updateSexoLabel();
             
             formContainer.classList.remove('hidden');
             formContainer.scrollIntoView({ behavior: 'smooth' });
@@ -208,41 +230,77 @@
             form.reset();
         }
 
+        // Atualiza label do sexo visualmente
+        function updateSexoLabel() {
+            if(sexoToggle.checked) {
+                sexoLabel.textContent = "Feminino";
+                sexoLabel.className = "mr-3 text-sm font-bold text-pink-600 w-20 text-right";
+            } else {
+                sexoLabel.textContent = "Masculino";
+                sexoLabel.className = "mr-3 text-sm font-bold text-blue-600 w-20 text-right";
+            }
+        }
+        sexoToggle.addEventListener('change', updateSexoLabel);
+
+        // --- CEP ---
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.slice(0, 8);
+            if (value.length > 5) value = value.slice(0, 5) + '-' + value.slice(5);
+            e.target.value = value;
+        });
+
+        cepInput.addEventListener('blur', async (e) => {
+            const cep = e.target.value.replace(/\D/g, '');
+            if (cep.length !== 8) return;
+            cepStatus.classList.remove('hidden');
+            cepStatus.textContent = "Buscando...";
+            
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await res.json();
+                if (!data.erro) {
+                    document.getElementById('end_res').value = data.logradouro;
+                    document.getElementById('bairro_res').value = data.bairro;
+                    document.getElementById('cidade_res').value = data.localidade;
+                    document.getElementById('estado_res').value = data.uf;
+                    document.getElementById('num_res').focus();
+                    cepStatus.classList.add('hidden');
+                } else {
+                    cepStatus.textContent = "Não encontrado.";
+                }
+            } catch { cepStatus.textContent = "Erro."; }
+        });
+
         async function carregarMedicos() {
             const res = await fetch('/api/medicos');
             const data = await res.json();
-            
             lista.innerHTML = data.map(m => {
                 const isAtivo = m.ativo == '1' || m.ativo === 1;
-                const statusBadge = isAtivo 
-                    ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Ativo</span>'
-                    : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inativo</span>';
-                
+                const badge = isAtivo ? '<span class="px-2 text-xs font-semibold rounded-full bg-green-100 text-green-800">Ativo</span>' : '<span class="px-2 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inativo</span>';
                 return `
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${m.nome}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">${m.crm}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">${m.especialidade || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick='editarMedico(${JSON.stringify(m)})' class="text-indigo-600 hover:text-indigo-900 font-bold">Editar</button>
-                    </td>
-                </tr>
-            `}).join('');
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">${badge}</td>
+                    <td class="px-6 py-4 font-medium">${m.nome}</td>
+                    <td class="px-6 py-4 text-gray-600">${m.crm}</td>
+                    <td class="px-6 py-4 text-gray-600">${m.especialidade || '-'}</td>
+                    <td class="px-6 py-4 text-right text-sm"><button onclick='editarMedico(${JSON.stringify(m)})' class="text-indigo-600 hover:text-indigo-900 font-bold">Editar</button></td>
+                </tr>`
+            }).join('');
         }
 
         function editarMedico(m) {
             document.getElementById('medico-id').value = m.id;
             document.getElementById('form-title').innerText = 'Editar Médico';
-            
-            // Preenche campos de texto
             textFields.forEach(f => {
                 const el = document.getElementById(f);
                 if(el) el.value = m[f] || '';
             });
-
-            // Trata o Toggle (Se for 1 ou '1', marca)
             document.getElementById('ativo').checked = (m.ativo == '1' || m.ativo === 1);
+            
+            // Carregar Sexo
+            sexoToggle.checked = (m.sexo == '1' || m.sexo === 1);
+            updateSexoLabel();
 
             formContainer.classList.remove('hidden');
             formContainer.scrollIntoView({ behavior: 'smooth' });
@@ -251,12 +309,10 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('medico-id').value;
-            
             const payload = {};
             textFields.forEach(f => payload[f] = document.getElementById(f).value);
-            
-            // Captura valor do Toggle (1 se marcado, 0 se não)
             payload['ativo'] = document.getElementById('ativo').checked ? '1' : '0';
+            payload['sexo'] = sexoToggle.checked ? '1' : '0'; // 1=F, 0=M
 
             const url = id ? `/api/medicos/${id}` : '/api/medicos';
             const method = id ? 'PUT' : 'POST';
@@ -275,13 +331,9 @@
                 } else {
                     alert('Erro: ' + result.message);
                 }
-            } catch (err) {
-                console.error(err);
-                alert('Erro de conexão.');
-            }
+            } catch { alert('Erro de conexão.'); }
         });
 
-        // Init
         carregarMedicos();
     </script>
 </body>

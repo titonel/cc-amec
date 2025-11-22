@@ -7,14 +7,14 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 DB_PRODUCAO = 'producao_cirurgica.db'
 DB_MEDICOS = 'medicos.db'
-GEMINI_API_KEY = "AIzaSyA9waj93Js4b8n9aoUtHQcbvWExalaiFG4" # Substitua se necessário
+GEMINI_API_KEY = "AIzaSyA9waj93Js4b8n9aoUtHQcbvWExalaiFG4" 
 
 COLUNAS_MESES = {
     1: 'jan', 2: 'fev', 3: 'mar', 4: 'abr', 5: 'mai', 6: 'jun',
     7: 'jul', 8: 'ago', 9: 'set', 10: 'out', 11: 'nov', 12: 'dez'
 }
 
-# --- CONEXÕES DE BANCO DE DADOS ---
+# --- CONEXÕES ---
 def get_producao_conn():
     conn = sqlite3.connect(DB_PRODUCAO)
     conn.row_factory = sqlite3.Row 
@@ -43,20 +43,17 @@ def get_auxiliary_maps():
     conn.close()
     return mapa_esp, mapa_tipo
 
-# --- ROTAS DE PÁGINAS ---
+# --- ROTAS ---
 @app.route('/')
-def index():
-    return render_template('index.html')
+def index(): return render_template('index.html')
 
 @app.route('/consulta')
-def consulta():
-    return render_template('consulta.html')
+def consulta(): return render_template('consulta.html')
 
 @app.route('/medicos')
-def medicos():
-    return render_template('medicos.html')
+def medicos(): return render_template('medicos.html')
 
-# --- API: PRODUÇÃO ---
+# --- API PRODUÇÃO ---
 @app.route('/api/search_procedimento')
 def search_procedimento():
     term = request.args.get('term', '')
@@ -64,12 +61,10 @@ def search_procedimento():
     conn = get_producao_conn()
     cursor = conn.cursor()
     mapa_esp, mapa_tipo = get_auxiliary_maps()
-
     try:
         cursor.execute("SELECT nome, codigo_sigtap, valor_sigtap FROM procedimentos WHERE nome LIKE ? LIMIT 15", ('%' + term + '%',))
     except sqlite3.OperationalError:
         cursor.execute("SELECT nome, codigo_sus as codigo_sigtap, valor_sigtap FROM procedimentos WHERE nome LIKE ? LIMIT 15", ('%' + term + '%',))
-
     resultado = []
     for row in cursor.fetchall():
         proc = dict(row)
@@ -95,11 +90,9 @@ def submit_producao():
         mes, qtd = int(data['mes']), float(data['quantidade'])
         col = COLUNAS_MESES.get(mes)
         if not col: return jsonify({'success': False, 'message': 'Mês inválido'}), 400
-        
         cursor.execute("SELECT id FROM producao WHERE codigo_sigtap = ?", (cod,))
         row = cursor.fetchone()
         col_sql = f'"{col}"' if col in ['set', 'out'] else col
-        
         if row:
             cursor.execute(f"UPDATE producao SET {col_sql} = ? WHERE id = ?", (qtd, row['id']))
             msg = "Atualizado!"
@@ -108,8 +101,7 @@ def submit_producao():
             msg = "Criado!"
         conn.commit()
         return jsonify({'success': True, 'message': msg})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+    except Exception as e: return jsonify({'success': False, 'message': str(e)}), 500
     finally: conn.close()
 
 @app.route('/api/producao_mensal', methods=['GET'])
@@ -117,17 +109,12 @@ def get_producao_mensal():
     cod, mes = request.args.get('codigo_sigtap'), int(request.args.get('mes', 0))
     col = COLUNAS_MESES.get(mes)
     if not cod or not col: return jsonify({'error': 'Inválido'}), 400
-    
     conn = get_producao_conn()
     col_sql = f'"{col}"' if col in ['set', 'out'] else col
     try:
-        conn.cursor().execute(f"SELECT t.{col_sql} as q, p.nome, p.valor_sigtap FROM producao t JOIN procedimentos p ON t.codigo_sigtap = p.codigo_sigtap WHERE t.codigo_sigtap = ?", (cod,))
-        row = conn.cursor().fetchone() # Bug fix: execute return cursor needed or fetch immediately
-        # Simplificando execução
         cur = conn.cursor()
         cur.execute(f"SELECT t.{col_sql} as q, p.nome, p.valor_sigtap FROM producao t JOIN procedimentos p ON t.codigo_sigtap = p.codigo_sigtap WHERE t.codigo_sigtap = ?", (cod,))
         row = cur.fetchone()
-        
         if row:
             q, v = row['q'] or 0, row['valor_sigtap'] or 0
             return jsonify({'encontrado': True, 'total': q, 'valor_total_produzido': q*v})
@@ -170,47 +157,41 @@ def get_medicos():
         cursor.execute("SELECT * FROM medicos ORDER BY nome")
         medicos = [dict(row) for row in cursor.fetchall()]
         return jsonify(medicos)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+    except Exception as e: return jsonify({'error': str(e)}), 500
+    finally: conn.close()
 
 @app.route('/api/medicos', methods=['POST'])
 def add_medico():
     data = request.get_json()
     conn = get_medicos_conn()
     try:
-        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res']
+        # ADICIONADO: 'sexo'
+        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
         vals = [data.get(c, '') for c in cols]
         placeholders = ', '.join(['?'] * len(cols))
-        
         cursor = conn.cursor()
         cursor.execute(f"INSERT INTO medicos ({', '.join(cols)}) VALUES ({placeholders})", vals)
         conn.commit()
         return jsonify({'success': True, 'message': 'Médico cadastrado!'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
-        conn.close()
+    except Exception as e: return jsonify({'success': False, 'message': str(e)}), 500
+    finally: conn.close()
 
 @app.route('/api/medicos/<int:id>', methods=['PUT'])
 def update_medico(id):
     data = request.get_json()
     conn = get_medicos_conn()
     try:
-        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res']
+        # ADICIONADO: 'sexo'
+        cols = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'ativo', 'inicio_ativ', 'fim_ativ', 'sexo']
         updates = ', '.join([f"{c} = ?" for c in cols])
         vals = [data.get(c, '') for c in cols]
         vals.append(id)
-        
         cursor = conn.cursor()
         cursor.execute(f"UPDATE medicos SET {updates} WHERE id = ?", vals)
         conn.commit()
-        return jsonify({'success': True, 'message': 'Dados atualizados!'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
-        conn.close()
+        return jsonify({'success': True, 'message': 'Atualizado!'})
+    except Exception as e: return jsonify({'success': False, 'message': str(e)}), 500
+    finally: conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

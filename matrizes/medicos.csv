@@ -1,2 +1,3 @@
-NOME;CRM;DN;ESPECIALIDADE;NACIONALIDADE;NATURALIDADE;TEL_DDD;TEL_CEL;EMAIL;CPF;RG;CEP_RES;END_RES;NUM_RES;COMP_RES;BAIRRO_RES;CIDADE_RES;ESTADO_RES
-CAMILA DE OLIVEIRA LIMA;210060;14/04/1991;NEUROLOGIA;BRASILEIRA;BARRETOS;17;981007746;draacamilalima@gmail.com;389.198.338-77;474289953 SSP-SP;11665-250;AVENIDA MATO GROSSO;480;XXX;INDAIA;CARAGUATATUBA;SP
+﻿id;nome;crm;dn;especialidade;nacionalidade;naturalidade;tel_ddd;tel_cel;email;cpf;rg;cep_res;end_res;num_res;comp_res;bairro_res;cidade_res;estado_res;ativo;inicio_ativ;fim_ativ;sexo
+1;Camila de Oliveira Lima;210060;1991-04-14;Neurologia;BRASILEIRA;BARRETOS;17;981007746;draacamilalima@gmail.com;389.198.338-77;474289953 SSP-SP;11665-250;Avenida Mato Grosso;480;XXX;Indaia;Caraguatatuba;SP;1;2025-06-19;;1
+2;Lucy Bernardes de Queiroz;156232;1970-10-10;Pneumologia;;;;;;392.896.561-15;375.325 SSP-MS;;;;;;;;1;2025-11-03;;1
