@@ -50,15 +50,39 @@ def setup_environment():
     )
     """)
 
-    # Criar usuário ADMIN padrão se a tabela estiver vazia (Bootstrap)
+    # Criar usuários padrão se a tabela estiver vazia (Bootstrap)
     cursor.execute("SELECT count(*) FROM usuarios")
     if cursor.fetchone()[0] == 0:
-        senha_padrao = generate_password_hash("12345") # Senha inicial genérica para o admin
-        cursor.execute("""
-            INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash, primeiro_acesso)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("Administrador Sistema", "M", "00000", "00000", "admin@amec.sp.gov.br", "Gerente", senha_padrao, 1))
-        print("Usuário ADMIN padrão criado (admin@amec.sp.gov.br / Senha inicial: 12345)")
+        
+        # Definição dos usuários iniciais
+        usuarios_iniciais = [
+            {
+                "nome": "Administrador Geral",
+                "sexo": "M",
+                "drt": "00000",
+                "celular": "00000",
+                "email": "admin@amecaragua.org.br",
+                "nivel": "Gerente"
+            },
+            {
+                "nome": "Saulo Bastos",
+                "sexo": "M",
+                "drt": "11111", 
+                "celular": "00000",
+                "email": "saulo.bastos@amecaragua.org.br",
+                "nivel": "Gerente"
+            }
+        ]
+        
+        # Gera o hash da senha padrão uma vez para usar nos inserts
+        senha_padrao_hash = generate_password_hash("123456")
+
+        for u in usuarios_iniciais:
+            cursor.execute("""
+                INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash, primeiro_acesso)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (u['nome'], u['sexo'], u['drt'], u['celular'], u['email'], u['nivel'], senha_padrao_hash, 1))
+            print(f"Usuário criado: {u['email']} (Senha inicial: 123456)")
 
     conn.commit()
     conn.close()
