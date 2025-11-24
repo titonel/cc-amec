@@ -94,28 +94,14 @@ def ambulatorial_index():
 def ambulatorial_robo():
     return render_template('amb_robo.html')
 
-@app.route('/ambulatorial/visualizar')
-def ambulatorial_visualizar():
-    """Nova Landing Page de Visualização"""
-    return render_template('amb_visualizacao_index.html')
-
-@app.route('/ambulatorial/visualizar/dashboard')
-def ambulatorial_dashboard():
-    return "<h1>Dashboard em construção...</h1><a href='/ambulatorial/visualizar'>Voltar</a>"
-
-@app.route('/ambulatorial/visualizar/tabelas')
-def ambulatorial_tabelas():
-    """Visualização em Tabela com Filtros e Cálculos"""
-    return render_template('amb_tabelas.html')
-
-# --- ROTAS DE UPLOAD MANUAL ---
-
 @app.route('/ambulatorial/manual')
 def ambulatorial_manual_page():
+    """Página de Upload (GET)"""
     return render_template('amb_manual.html')
 
 @app.route('/ambulatorial/manual/analisar', methods=['POST'])
 def ambulatorial_analisar():
+    """Etapa 1: Recebe arquivo, lê A3/F3 e retorna metadados para confirmação"""
     if 'file' not in request.files:
         return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'})
     
@@ -125,12 +111,14 @@ def ambulatorial_analisar():
 
     try:
         filename = secure_filename(file.filename)
+        # Adiciona timestamp para evitar colisão de nomes
         unique_filename = f"{int(datetime.now().timestamp())}_{filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(filepath)
         
         ext = filename.rsplit('.', 1)[1].lower()
         
+        # 1. Ler Metadados (A3 e F3) - Primeiras 5 linhas
         df_meta = None
         try:
             if ext == 'csv':
@@ -138,39 +126,56 @@ def ambulatorial_analisar():
                 except: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=',', encoding='latin1')
             else:
                 try: df_meta = pd.read_excel(filepath, header=None, nrows=5)
-                except: df_meta = pd.read_html(filepath, decimal=',', thousands='.', header=None)[0].iloc[:5]
+                except: 
+                    dfs = pd.read_html(filepath, decimal=',', thousands='.', header=None)
+                    df_meta = dfs[0].iloc[:5]
         except Exception as e:
             os.remove(filepath)
             return jsonify({'success': False, 'message': f'Erro ao ler metadados: {str(e)}'})
 
-        try: val_a3 = str(df_meta.iloc[2, 0]).strip()
-        except: val_a3 = "Desconhecido"
-
+        # Ler Célula A3 (Linha índice 2, Coluna índice 0)
         try:
-            if df_meta.shape[1] > 5: val_f3 = str(df_meta.iloc[2, 5]).strip()
+            val_a3 = str(df_meta.iloc[2, 0]).strip()
+        except:
+            val_a3 = "Desconhecido"
+
+        # Ler Célula F3 (Linha índice 2, Coluna índice 5)
+        try:
+            if df_meta.shape[1] > 5:
+                val_f3 = str(df_meta.iloc[2, 5]).strip()
             else:
+                # Fallback: procura padrão de data na linha
                 val_f3 = "Data não encontrada"
                 for c in range(df_meta.shape[1]):
                     v = str(df_meta.iloc[2, c])
-                    if " de " in v and any(char.isdigit() for char in v): val_f3 = v; break
-        except: val_f3 = "Erro na leitura"
+                    if " de " in v and any(char.isdigit() for char in v):
+                        val_f3 = v; break
+        except:
+            val_f3 = "Erro na leitura"
 
+        # Determinar Tipo (Consulta vs Exame)
         tipo_identificado = "Desconhecido"
         target_table = ""
-        if 'consulta' in val_a3.lower(): tipo_identificado, target_table = "Consulta", "producao_amb"
-        elif 'exame' in val_a3.lower(): tipo_identificado, target_table = "Exame", "producao_exame"
+        
+        if 'consulta' in val_a3.lower():
+            tipo_identificado = "Consulta"
+            target_table = "producao_amb"
+        elif 'exame' in val_a3.lower():
+            tipo_identificado = "Exame"
+            target_table = "producao_exame"
         
         if target_table == "":
              os.remove(filepath)
-             return jsonify({'success': False, 'message': f'Tipo de arquivo não reconhecido na célula A3 ("{val_a3}").'})
+             return jsonify({'success': False, 'message': f'Tipo de arquivo não reconhecido na célula A3 ("{val_a3}"). Esperado "Consulta" ou "Exame".'})
 
+        # Retorna dados para o frontend confirmar
         return jsonify({
             'success': True,
             'confirmation_required': True,
-            'filename': unique_filename,
-            'tipo_arquivo': val_a3,
-            'tipo_sistema': tipo_identificado,
-            'mes_ano': val_f3
+            'filename': unique_filename, # Nome temporário para o próximo passo
+            'tipo_arquivo': val_a3,      # Texto original A3
+            'tipo_sistema': tipo_identificado, # Lógica interna
+            'mes_ano': val_f3            # Texto original F3
         })
 
     except Exception as e:
@@ -178,18 +183,24 @@ def ambulatorial_analisar():
 
 @app.route('/ambulatorial/manual/confirmar', methods=['POST'])
 def ambulatorial_confirmar():
+    """Etapa 2: Processa o arquivo após confirmação do usuário"""
     data = request.get_json()
     filename = data.get('filename')
-    if not filename: return jsonify({'success': False, 'message': 'Nome de arquivo inválido.'})
+    
+    if not filename:
+        return jsonify({'success': False, 'message': 'Nome de arquivo inválido.'})
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if not os.path.exists(filepath): return jsonify({'success': False, 'message': 'Arquivo expirou.'})
+    if not os.path.exists(filepath):
+        return jsonify({'success': False, 'message': 'Arquivo expirou ou não existe. Faça o upload novamente.'})
 
     try:
         ext = filename.rsplit('.', 1)[1].lower()
-        
-        # Re-leitura para segurança
+
+        # Relê metadados para garantir integridade (A3/F3)
+        # Repetimos a lógica para decidir a tabela, garantindo segurança no backend
         df_meta = None
+        # (Lógica de leitura igual à etapa 1 para pegar A3)
         if ext == 'csv':
             try: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=';', encoding='latin1')
             except: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=',', encoding='latin1')
@@ -199,22 +210,29 @@ def ambulatorial_confirmar():
             
         val_a3 = str(df_meta.iloc[2, 0]).strip()
         val_f3 = str(df_meta.iloc[2, 5] if df_meta.shape[1] > 5 else "").strip()
+        # Fallback F3
         if not val_f3 or " de " not in val_f3:
              for c in range(df_meta.shape[1]):
                 v = str(df_meta.iloc[2, c])
                 if " de " in v: val_f3 = v; break
 
+        # Decisão de Tabela
         tabela_destino = ""
         if 'consulta' in val_a3.lower(): tabela_destino = "producao_amb"
         elif 'exame' in val_a3.lower(): tabela_destino = "producao_exame"
         else: raise Exception("Tipo de arquivo inválido.")
 
+        # Parsing de Data (F3)
         try:
             partes = val_f3.lower().split(' de ')
-            mes_arquivo, ano_arquivo = partes[0].capitalize(), int(partes[1])
-        except: mes_arquivo, ano_arquivo = val_f3, 0
+            mes_arquivo = partes[0].capitalize()
+            ano_arquivo = int(partes[1])
+        except:
+            mes_arquivo = val_f3
+            ano_arquivo = 0
 
-        # Leitura de Dados
+        # --- LEITURA DOS DADOS (Mesma lógica robusta anterior) ---
+        # 1. Localizar Cabeçalho (Procura "Especialidade" nas primeiras 15 linhas)
         df_preview = None
         if ext == 'csv':
             try: df_preview = pd.read_csv(filepath, header=None, nrows=15, sep=';', encoding='latin1')
@@ -227,22 +245,26 @@ def ambulatorial_confirmar():
         for idx, row in df_preview.iterrows():
             row_str = str(row.values).lower()
             if 'especialidade' in row_str and 'oferta' in row_str:
-                header_idx = idx; break
+                header_idx = idx
+                break
         
         if header_idx == -1: raise Exception("Cabeçalho não encontrado.")
 
+        # 2. Ler Dados
         if ext == 'csv':
             df_dados = pd.read_csv(filepath, header=header_idx, sep=';', encoding='latin1') if ';' in open(filepath, encoding='latin1').read() else pd.read_csv(filepath, header=header_idx, sep=',', encoding='latin1')
         else:
             try: df_dados = pd.read_excel(filepath, header=header_idx)
             except: df_dados = pd.read_html(filepath, decimal=',', thousands='.', header=header_idx)[0]
 
+        # 3. Mapear Colunas (4 primeiras fixas)
         if df_dados.shape[1] < 4: raise Exception("Menos de 4 colunas encontradas.")
         
         df_trabalho = df_dados.iloc[:, :4].copy()
         df_trabalho.columns = ['especialidade', 'oferta', 'agendado', 'realizado']
         df_trabalho = df_trabalho.dropna(how='all')
 
+        # 4. Inserir no Banco
         conn = get_amb_conn()
         cursor = conn.cursor()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -257,7 +279,9 @@ def ambulatorial_confirmar():
                 try: return int(float(str(val).replace('.', '').replace(',', '.')))
                 except: return 0
 
-            oferta, agendado, realizado = safe_int(row['oferta']), safe_int(row['agendado']), safe_int(row['realizado'])
+            oferta = safe_int(row['oferta'])
+            agendado = safe_int(row['agendado'])
+            realizado = safe_int(row['realizado'])
 
             cursor.execute(f"""
                 INSERT INTO {tabela_destino} (especialidade, oferta, agendado, realizado, mes, ano, usuario, timestamp)
@@ -267,100 +291,18 @@ def ambulatorial_confirmar():
 
         conn.commit()
         conn.close()
-        os.remove(filepath)
-
-        return jsonify({'success': True, 'message': f'Sucesso! {registros} registros importados para {tabela_destino}.'})
-
-    except Exception as e: return jsonify({'success': False, 'message': f'Erro no processamento: {str(e)}'})
-
-# --- APIS PARA VISUALIZAÇÃO ---
-
-@app.route('/api/ambulatorial/filtros', methods=['GET'])
-def get_filtros_ambulatorial():
-    """Retorna listas únicas de Especialidades, Meses e Anos para os filtros"""
-    conn = get_amb_conn()
-    cursor = conn.cursor()
-    try:
-        # Buscamos de ambas as tabelas (union) para ter filtros completos
-        # (Ou apenas de producao_amb se for o foco inicial, mas melhor ter tudo)
-        filtros = {
-            "especialidades": [],
-            "meses": [],
-            "anos": []
-        }
         
-        # Query unificada
-        for campo in ["especialidade", "mes", "ano"]:
-            # SQL simples para pegar distintos
-            query = f"SELECT DISTINCT {campo} FROM producao_amb ORDER BY {campo}"
-            cursor.execute(query)
-            filtros[f"{campo}s" if campo != "mes" else "meses"] = [row[0] for row in cursor.fetchall() if row[0]]
-            
-        return jsonify(filtros)
+        os.remove(filepath) # Limpeza final
+
+        return jsonify({
+            'success': True, 
+            'message': f'Sucesso! {registros} registros importados para tabela {tabela_destino}.'
+        })
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+        return jsonify({'success': False, 'message': f'Erro no processamento: {str(e)}'})
 
-@app.route('/api/ambulatorial/dados', methods=['GET'])
-def get_dados_ambulatorial():
-    """Retorna dados filtrados com os cálculos de porcentagem"""
-    esp = request.args.get('especialidade')
-    mes = request.args.get('mes')
-    ano = request.args.get('ano')
-    
-    conn = get_amb_conn()
-    cursor = conn.cursor()
-    
-    try:
-        query = "SELECT * FROM producao_amb WHERE 1=1"
-        params = []
-        
-        if esp and esp != "Todas":
-            query += " AND especialidade = ?"
-            params.append(esp)
-        if mes and mes != "Todos":
-            query += " AND mes = ?"
-            params.append(mes)
-        if ano and ano != "Todos":
-            query += " AND ano = ?"
-            params.append(ano)
-            
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        
-        resultados = []
-        for row in rows:
-            d = dict(row)
-            
-            # Cálculos (Evitando divisão por zero)
-            oferta = d.get('oferta', 0) or 0
-            agendado = d.get('agendado', 0) or 0
-            realizado = d.get('realizado', 0) or 0
-            
-            # Taxa Absenteísmo: 1 - (Realizado / Agendado)
-            if agendado > 0:
-                taxa_abs = (1 - (realizado / agendado)) * 100
-            else:
-                taxa_abs = 0.0 # Ou 100? Se nada foi agendado, tecnicamente não há absenteísmo calculável, mantendo 0 por segurança
-                
-            # Perda Primária: 1 - (Agendado / Ofertado)
-            if oferta > 0:
-                taxa_perda = (1 - (agendado / oferta)) * 100
-            else:
-                taxa_perda = 0.0
-            
-            d['taxa_absenteismo'] = round(taxa_abs, 2)
-            d['taxa_perda_primaria'] = round(taxa_perda, 2)
-            resultados.append(d)
-            
-        return jsonify(resultados)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
-
-# --- API LEGADAS (MANTIDAS) ---
+# --- DEMAIS ROTAS (MANTIDAS) ---
 @app.route('/api/search_procedimento')
 def search_procedimento():
     term = request.args.get('term', '')

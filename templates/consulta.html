@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Produção</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js](https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         #search-results {
             position: absolute; width: 100%; z-index: 50;
@@ -20,26 +20,41 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <!-- Navbar Atualizada -->
+    <!-- Navbar Global -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto max-w-3xl p-4 flex justify-start items-center space-x-6">
-            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
-                <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                INÍCIO
-            </a>
-            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
-            <span class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1">CONSULTA</span>
-            <a href="/medicos" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">MÉDICOS</a>
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center gap-2 text-blue-600 font-bold text-xl hover:text-blue-700 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        AME Caraguatatuba
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="/medicos" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Médicos</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Empresas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
+                    <a href="/producao" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Produção</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
+                </div>
+            </div>
         </div>
     </nav>
 
     <div class="container mx-auto max-w-5xl p-6 mt-4">
         
+        <!-- Submenu -->
+        <div class="flex items-center gap-6 mb-6 border-b pb-4">
+            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium pb-1 transition-colors">Lançamento</a>
+            <a href="/consulta" class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1">Consulta</a>
+        </div>
+
         <!-- Busca -->
         <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">🔍 Consulta de Produção</h1>
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">🔍 Consulta de Produção Cirúrgica</h1>
             
             <div class="relative mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Buscar Procedimento</label>
@@ -49,7 +64,6 @@
                 <div id="search-results" class="bg-white rounded-b-md shadow-lg hidden"></div>
             </div>
 
-            <!-- Detalhes do Selecionado -->
             <div id="selected-info" class="hidden bg-blue-50 p-4 rounded-md border border-blue-200 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-2">
                     <p class="text-xs text-blue-600 uppercase font-bold">Procedimento</p>
@@ -142,13 +156,11 @@
         const searchInput = document.getElementById('proc-search');
         const resultsBox = document.getElementById('search-results');
         const selectedBox = document.getElementById('selected-info');
-        
         const displayProc = document.getElementById('display-proc-name');
         const displayCode = document.getElementById('display-sigtap-code');
         const displayEsp = document.getElementById('display-esp');
         const displayTipo = document.getElementById('display-tipo');
         const hiddenCode = document.getElementById('hidden-sigtap-code');
-        
         const btnMensal = document.getElementById('btn-mensal');
         const btnHistorico = document.getElementById('btn-historico');
 
@@ -156,7 +168,6 @@
         let historicoData = [];
         let currentProcName = "";
 
-        // Inicialização
         (function init() {
             const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             const elMes = document.getElementById('mes-pontual');
@@ -173,30 +184,21 @@
             document.getElementById(`tab-${tab}`).className = 'inline-block p-4 rounded-t-lg tab-active cursor-pointer';
         }
 
-        // Busca Dinâmica
         let timer;
         searchInput.addEventListener('input', (e) => {
             clearTimeout(timer);
             if(e.target.value.length < 3) { resultsBox.classList.add('hidden'); return; }
-            
             timer = setTimeout(async () => {
                 const res = await fetch(`/api/search_procedimento?term=${e.target.value}`);
                 const data = await res.json();
                 resultsBox.innerHTML = '';
-                
                 if(data.length === 0) {
                     resultsBox.innerHTML = '<div class="p-3 text-gray-500">Nenhum resultado.</div>';
                 } else {
                     data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'p-3 cursor-pointer hover:bg-blue-50 border-b text-sm grid grid-cols-1';
-                        d.innerHTML = `
-                            <span class="font-bold text-gray-800">${p.nome}</span>
-                            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>SIGTAP: ${p.codigo_sigtap}</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 rounded">${p.nome_especialidade}</span>
-                            </div>
-                        `;
+                        d.innerHTML = `<span class="font-bold text-gray-800">${p.nome}</span><div class="flex justify-between text-xs text-gray-500 mt-1"><span>SIGTAP: ${p.codigo_sigtap}</span><span class="bg-blue-100 text-blue-800 px-2 rounded">${p.nome_especialidade}</span></div>`;
                         d.onclick = () => selectProc(p);
                         resultsBox.appendChild(d);
                     });
@@ -209,31 +211,24 @@
             searchInput.value = '';
             resultsBox.classList.add('hidden');
             selectedBox.classList.remove('hidden');
-            
             displayProc.innerText = p.nome;
             displayCode.innerText = p.codigo_sigtap;
             displayEsp.innerText = p.nome_especialidade;
             displayTipo.innerText = p.tipo_cirurgia;
-            
-            hiddenCode.value = p.codigo_sigtap; // Armazena o código SIGTAP
+            hiddenCode.value = p.codigo_sigtap; 
             currentProcName = p.nome;
-
             btnMensal.disabled = false;
             btnHistorico.disabled = false;
-            
             document.getElementById('resultado-mensal').classList.add('hidden');
             if(chartInstance) chartInstance.destroy();
             document.getElementById('ia-wrapper').classList.add('hidden');
         }
 
-        // Consultas usando SIGTAP
         async function consultarMensal() {
             const codigo = hiddenCode.value;
             const mes = document.getElementById('mes-pontual').value;
-            
             const res = await fetch(`/api/producao_mensal?codigo_sigtap=${codigo}&mes=${mes}`);
             const data = await res.json();
-            
             document.getElementById('resultado-mensal').classList.remove('hidden');
             if(data.encontrado) {
                 document.getElementById('res-qtd').innerText = data.total;
@@ -249,12 +244,9 @@
             const res = await fetch(`/api/historico?codigo_sigtap=${codigo}`);
             const json = await res.json();
             historicoData = json.data;
-
             if(chartInstance) chartInstance.destroy();
-            
             const ctx = document.getElementById('chartHistorico').getContext('2d');
             const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -269,7 +261,6 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
-
             if(historicoData.length > 0) document.getElementById('ia-wrapper').classList.remove('hidden');
         }
 
@@ -277,7 +268,6 @@
             const div = document.getElementById('ia-result');
             div.innerHTML = '<div class="animate-pulse text-purple-600">Consultando o Gemini... 🧠</div>';
             div.classList.remove('hidden');
-            
             const res = await fetch('/api/analise_ia', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

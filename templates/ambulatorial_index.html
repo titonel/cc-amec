@@ -8,32 +8,55 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 
+    <!-- Navbar Global -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto max-w-6xl p-4 flex items-center gap-4">
-            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                VOLTAR
-            </a>
-            <h1 class="text-xl font-bold text-teal-600">GESTÃO AMBULATORIAL</h1>
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center gap-2 text-blue-600 font-bold text-xl hover:text-blue-700 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        AME Caraguatatuba
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="/medicos" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Médicos</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Empresas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
+                    <a href="/producao" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Produção</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
+                </div>
+            </div>
         </div>
     </nav>
 
     <div class="container mx-auto max-w-6xl p-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="flex items-center gap-4 mb-8">
+            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar
+            </a>
+            <h1 class="text-2xl font-bold text-teal-600">Gestão Ambulatorial</h1>
+        </div>
 
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed grayscale">
-                <div class="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center mb-4 text-white">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Visualizar (ATIVADO) -->
+            <a href="/ambulatorial/visualizar" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 cursor-pointer">
+                <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                 </div>
-                <h3 class="font-bold text-gray-600">Visualizar Dados</h3>
-                <p class="text-xs text-gray-500 mt-2">Em desenvolvimento</p>
-            </div>
+                <h3 class="font-bold text-gray-800 group-hover:text-blue-600">Visualizar Dados</h3>
+                <p class="text-xs text-gray-500 mt-2">Dashboard e relatórios</p>
+            </a>
 
+            <!-- Editar (Cinza) -->
             <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed grayscale">
                 <div class="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center mb-4 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -44,6 +67,7 @@
                 <p class="text-xs text-gray-500 mt-2">Em desenvolvimento</p>
             </div>
 
+            <!-- Carregar Manual -->
             <a href="/ambulatorial/manual" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1">
                 <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,6 +78,7 @@
                 <p class="text-xs text-gray-500 mt-2">Upload manual de arquivo (XLS)</p>
             </a>
 
+            <!-- Robô -->
             <a href="/ambulatorial/robo" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1">
                 <div class="w-14 h-14 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +88,6 @@
                 <h3 class="font-bold text-gray-800 group-hover:text-teal-600">Carregar Usando Robô</h3>
                 <p class="text-xs text-gray-500 mt-2">Automação SIRESP</p>
             </a>
-
         </div>
     </div>
 </body>

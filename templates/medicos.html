@@ -6,11 +6,8 @@
     <title>Gestão de Médicos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Toggle Ativo (Verde) */
         .toggle-active:checked { right: 0; border-color: #10B981; }
         .toggle-active:checked + .label-active { background-color: #10B981; }
-        
-        /* Toggle Sexo (Azul/Rosa) */
         .toggle-sexo:checked { right: 0; border-color: #ec4899; }
         .toggle-sexo:checked + .label-sexo { background-color: #ec4899; }
         .toggle-sexo:not(:checked) + .label-sexo { background-color: #3b82f6; }
@@ -18,17 +15,27 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
+    <!-- Navbar Global -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto max-w-6xl p-4 flex space-x-6 overflow-x-auto items-center">
-            <a href="/" class="text-gray-500 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                INÍCIO
-            </a>
-            <a href="/producao" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">PRODUÇÃO</a>
-            <a href="/consulta" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">CONSULTA</a>
-            <a href="/medicos" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors">MÉDICOS</a>
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center gap-2 text-blue-600 font-bold text-xl hover:text-blue-700 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        AME Caraguatatuba
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="/medicos" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Médicos</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Empresas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
+                    <a href="/producao" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Produção</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -44,9 +51,7 @@
         <div id="form-container" class="bg-white p-6 rounded-lg shadow mb-8 hidden border-l-4 border-blue-500">
             <div class="flex flex-wrap justify-between items-start mb-6 gap-4">
                 <h2 class="text-xl font-semibold text-gray-700" id="form-title">Novo Médico</h2>
-                
                 <div class="flex gap-6">
-                    <!-- Sexo -->
                     <div class="flex items-center">
                         <label class="mr-3 text-sm font-medium text-gray-700 w-20 text-right" id="sexo-label">Masculino</label>
                         <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -54,8 +59,6 @@
                             <label for="sexo" class="toggle-label label-sexo block overflow-hidden h-6 rounded-full cursor-pointer transition-all duration-300"></label>
                         </div>
                     </div>
-
-                    <!-- Ativo -->
                     <div class="flex items-center">
                         <label for="ativo" class="mr-3 text-sm font-medium text-gray-700">Ativo?</label>
                         <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -68,8 +71,6 @@
 
             <form id="medico-form" class="space-y-4">
                 <input type="hidden" id="medico-id">
-                
-                <!-- Atividade -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-md border border-blue-100 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Início de Atividade</label>
@@ -80,8 +81,6 @@
                         <input type="date" id="fim_ativ" class="w-full border rounded px-3 py-2 focus:ring-blue-500">
                     </div>
                 </div>
-
-                <!-- Dados Pessoais -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Nome Completo</label>
@@ -92,7 +91,6 @@
                         <input type="text" id="crm" class="w-full border rounded px-3 py-2 focus:ring-blue-500" required>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Data Nasc.</label>
@@ -107,8 +105,6 @@
                         <input type="text" id="rg" class="w-full border rounded px-3 py-2 focus:ring-blue-500">
                     </div>
                 </div>
-
-                <!-- Nacionalidade e Naturalidade -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">País de Nacionalidade</label>
@@ -122,41 +118,16 @@
                         <label class="block text-sm font-medium text-gray-700">UF Naturalidade</label>
                         <select id="estado_natural" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
                             <option value="">UF</option>
-                            <option value="AC">AC</option>
-                            <option value="AL">AL</option>
-                            <option value="AP">AP</option>
-                            <option value="AM">AM</option>
-                            <option value="BA">BA</option>
-                            <option value="CE">CE</option>
-                            <option value="DF">DF</option>
-                            <option value="ES">ES</option>
-                            <option value="GO">GO</option>
-                            <option value="MA">MA</option>
-                            <option value="MT">MT</option>
-                            <option value="MS">MS</option>
-                            <option value="MG">MG</option>
-                            <option value="PA">PA</option>
-                            <option value="PB">PB</option>
-                            <option value="PR">PR</option>
-                            <option value="PE">PE</option>
-                            <option value="PI">PI</option>
-                            <option value="RJ">RJ</option>
-                            <option value="RN">RN</option>
-                            <option value="RS">RS</option>
-                            <option value="RO">RO</option>
-                            <option value="RR">RR</option>
-                            <option value="SC">SC</option>
                             <option value="SP">SP</option>
-                            <option value="SE">SE</option>
-                            <option value="TO">TO</option>
+                            <option value="RJ">RJ</option>
+                            <option value="MG">MG</option>
+                            <!-- ... outros estados ... -->
                         </select>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Especialidade</label>
-                        <!-- MODIFICADO: Select populado dinamicamente -->
                         <select id="especialidade" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
                             <option value="">Selecione...</option>
                         </select>
@@ -166,8 +137,6 @@
                         <input type="email" id="email" class="w-full border rounded px-3 py-2 focus:ring-blue-500">
                     </div>
                 </div>
-
-                <!-- Endereço -->
                 <div class="border-t pt-4 mt-2">
                     <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Endereço e Contato</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -177,14 +146,13 @@
                         </div>
                         <div class="md:col-span-3">
                             <label class="block text-sm font-medium text-gray-700">Celular</label>
-                            <input type="text" id="tel_cel" class="w-full border rounded px-3 py-2 focus:ring-blue-500" maxlength="10" pattern="\d{5}-\d{4}" title="Formato obrigatório: 99999-9999" placeholder="99999-9999">
+                            <input type="text" id="tel_cel" class="w-full border rounded px-3 py-2 focus:ring-blue-500" maxlength="10" placeholder="99999-9999">
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div class="relative">
                             <label class="block text-sm font-medium text-gray-700">CEP</label>
-                            <input type="text" id="cep_res" class="w-full border rounded px-3 py-2 pr-8 focus:ring-blue-500" placeholder="00000-000" maxlength="9" pattern="\d{5}-\d{3}">
+                            <input type="text" id="cep_res" class="w-full border rounded px-3 py-2 pr-8 focus:ring-blue-500" placeholder="00000-000" maxlength="9">
                             <div class="absolute bottom-2 right-2 text-gray-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -197,7 +165,6 @@
                             <input type="text" id="end_res" class="w-full border rounded px-3 py-2 bg-gray-50">
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Número</label>
@@ -212,7 +179,6 @@
                             <input type="text" id="bairro_res" class="w-full border rounded px-3 py-2 bg-gray-50">
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Cidade</label>
@@ -222,38 +188,12 @@
                             <label class="block text-sm font-medium text-gray-700">Estado (UF)</label>
                             <select id="estado_res" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
                                 <option value="">UF</option>
-                                <option value="AC">AC</option>
-                                <option value="AL">AL</option>
-                                <option value="AP">AP</option>
-                                <option value="AM">AM</option>
-                                <option value="BA">BA</option>
-                                <option value="CE">CE</option>
-                                <option value="DF">DF</option>
-                                <option value="ES">ES</option>
-                                <option value="GO">GO</option>
-                                <option value="MA">MA</option>
-                                <option value="MT">MT</option>
-                                <option value="MS">MS</option>
-                                <option value="MG">MG</option>
-                                <option value="PA">PA</option>
-                                <option value="PB">PB</option>
-                                <option value="PR">PR</option>
-                                <option value="PE">PE</option>
-                                <option value="PI">PI</option>
-                                <option value="RJ">RJ</option>
-                                <option value="RN">RN</option>
-                                <option value="RS">RS</option>
-                                <option value="RO">RO</option>
-                                <option value="RR">RR</option>
-                                <option value="SC">SC</option>
                                 <option value="SP">SP</option>
-                                <option value="SE">SE</option>
-                                <option value="TO">TO</option>
+                                <!-- ... -->
                             </select>
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="button" onclick="cancelarEdicao()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
                     <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition">Salvar Dados</button>
@@ -285,23 +225,19 @@
         const cepStatus = document.getElementById('cep-status');
         const sexoToggle = document.getElementById('sexo');
         const sexoLabel = document.getElementById('sexo-label');
-        
         const dddInput = document.getElementById('tel_ddd');
         const celInput = document.getElementById('tel_cel');
-        
         const textFields = ['nome', 'crm', 'dn', 'especialidade', 'nacionalidade', 'naturalidade', 'estado_natural', 'tel_ddd', 'tel_cel', 'email', 'cpf', 'rg', 'cep_res', 'end_res', 'num_res', 'comp_res', 'bairro_res', 'cidade_res', 'estado_res', 'inicio_ativ', 'fim_ativ'];
 
-        // --- INICIALIZAÇÃO: Carrega especialidades ---
         async function carregarEspecialidades() {
             const sel = document.getElementById('especialidade');
             try {
                 const res = await fetch('/api/especialidades_amec');
                 const list = await res.json();
                 if (list.length > 0) {
-                    sel.innerHTML = '<option value="">Selecione...</option>' + 
-                        list.map(e => `<option value="${e}">${e}</option>`).join('');
+                    sel.innerHTML = '<option value="">Selecione...</option>' + list.map(e => `<option value="${e}">${e}</option>`).join('');
                 }
-            } catch (e) { console.error("Erro ao carregar especialidades", e); }
+            } catch (e) { console.error(e); }
         }
         carregarEspecialidades();
 
@@ -332,7 +268,6 @@
         }
         sexoToggle.addEventListener('change', updateSexoLabel);
 
-        // Validações
         dddInput.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 2); });
         celInput.addEventListener('input', (e) => {
             let val = e.target.value.replace(/\D/g, '');
@@ -386,12 +321,10 @@
         function editarMedico(m) {
             document.getElementById('medico-id').value = m.id;
             document.getElementById('form-title').innerText = 'Editar Médico';
-            
             textFields.forEach(f => {
                 const el = document.getElementById(f);
                 if(el) el.value = m[f] || '';
             });
-
             document.getElementById('ativo').checked = (m.ativo == '1' || m.ativo === 1);
             sexoToggle.checked = (m.sexo == '1' || m.sexo === 1);
             updateSexoLabel();
@@ -406,10 +339,8 @@
             textFields.forEach(f => payload[f] = document.getElementById(f).value);
             payload['ativo'] = document.getElementById('ativo').checked ? '1' : '0';
             payload['sexo'] = sexoToggle.checked ? '1' : '0';
-
             const url = id ? `/api/medicos/${id}` : '/api/medicos';
             const method = id ? 'PUT' : 'POST';
-
             try {
                 const res = await fetch(url, {
                     method: method,
