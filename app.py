@@ -5,18 +5,31 @@ import requests
 import pandas as pd
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['SECRET_KEY'] = 'chave_super_secreta_amec_2025' # Necessário para sessão e flash messages
 
 # Garante que a pasta de uploads existe
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-DB_PRODUCAO = 'producao_cirurgica.db'
-DB_MEDICOS = 'medicos.db'
-DB_AMB = 'amb.db'
+# Configuração Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = "Por favor, faça login para acessar o sistema."
+
+# --- BANCOS DE DADOS (Caminhos atualizados para pasta 'db') ---
+DB_FOLDER = 'db'
+DB_PRODUCAO = os.path.join(DB_FOLDER, 'producao_cirurgica.db')
+DB_MEDICOS = os.path.join(DB_FOLDER, 'medicos.db')
+DB_AMB = os.path.join(DB_FOLDER, 'amb.db')
+DB_CADASTRO = os.path.join(DB_FOLDER, 'cadastro.db')
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 
 COLUNAS_MESES = {
@@ -24,21 +37,36 @@ COLUNAS_MESES = {
     7: 'jul', 8: 'ago', 9: 'set', 10: 'out', 11: 'nov', 12: 'dez'
 }
 
+# --- MODELO DE USUÁRIO (Flask-Login) ---
+class User(UserMixin):
+    def __init__(self, id, nome, email, nivel_acesso, primeiro_acesso):
+        self.id = id
+        self.nome = nome
+        self.email = email
+        self.nivel_acesso = nivel_acesso
+        self.primeiro_acesso = primeiro_acesso
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = sqlite3.connect(DB_CADASTRO)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome_completo, email, nivel_acesso, primeiro_acesso FROM usuarios WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return User(id=row[0], nome=row[1], email=row[2], nivel_acesso=row[3], primeiro_acesso=row[4])
+    return None
+
 # --- CONEXÕES ---
-def get_producao_conn():
-    conn = sqlite3.connect(DB_PRODUCAO)
-    conn.row_factory = sqlite3.Row 
-    return conn
-
-def get_medicos_conn():
-    conn = sqlite3.connect(DB_MEDICOS)
+def get_db_connection(db_path):
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
-def get_amb_conn():
-    conn = sqlite3.connect(DB_AMB)
-    conn.row_factory = sqlite3.Row
-    return conn
+def get_producao_conn(): return get_db_connection(DB_PRODUCAO)
+def get_medicos_conn(): return get_db_connection(DB_MEDICOS)
+def get_amb_conn(): return get_db_connection(DB_AMB)
+def get_cadastro_conn(): return get_db_connection(DB_CADASTRO)
 
 # --- AUXILIARES ---
 def get_auxiliary_maps():
@@ -48,74 +76,199 @@ def get_auxiliary_maps():
     try:
         cursor.execute("SELECT * FROM especialidades")
         for r in cursor.fetchall():
-            vals = list(r)
-            if len(vals) >= 2: mapa_esp[str(vals[0])] = str(vals[1])
+            if len(list(r)) >= 2: mapa_esp[str(r[0])] = str(r[1])
         cursor.execute("SELECT * FROM tipo_cma")
         for r in cursor.fetchall():
-            vals = list(r)
-            if len(vals) >= 2: mapa_tipo[str(vals[0])] = str(vals[1])
+            if len(list(r)) >= 2: mapa_tipo[str(r[0])] = str(r[1])
     except: pass
     conn.close()
     return mapa_esp, mapa_tipo
 
-# --- ROTAS PRINCIPAIS ---
+# --- ROTAS DE AUTENTICAÇÃO ---
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        
+        conn = get_cadastro_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        user_data = cursor.fetchone()
+        conn.close()
+        
+        if user_data and check_password_hash(user_data['senha_hash'], senha):
+            user_obj = User(
+                id=user_data['id'], 
+                nome=user_data['nome_completo'], 
+                email=user_data['email'], 
+                nivel_acesso=user_data['nivel_acesso'],
+                primeiro_acesso=user_data['primeiro_acesso']
+            )
+            login_user(user_obj)
+            
+            # Verificação de Primeiro Acesso
+            if user_data['primeiro_acesso'] == 1:
+                return redirect(url_for('primeiro_acesso'))
+                
+            return redirect(url_for('index'))
+        else:
+            flash('Email ou senha inválidos.', 'error')
+            
+    return render_template('login.html')
+
+@app.route('/primeiro_acesso', methods=['GET', 'POST'])
+@login_required
+def primeiro_acesso():
+    if current_user.primeiro_acesso == 0:
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        nova_senha = request.form.get('nova_senha')
+        confirma_senha = request.form.get('confirma_senha')
+        
+        if nova_senha != confirma_senha:
+            flash('As senhas não conferem.', 'error')
+        elif len(nova_senha) < 6:
+            flash('A senha deve ter no mínimo 6 caracteres.', 'error')
+        else:
+            # Atualiza senha e remove flag de primeiro acesso
+            novo_hash = generate_password_hash(nova_senha)
+            conn = get_cadastro_conn()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE usuarios SET senha_hash = ?, primeiro_acesso = 0 WHERE id = ?", (novo_hash, current_user.id))
+            conn.commit()
+            conn.close()
+            
+            # Atualiza sessão atual
+            current_user.primeiro_acesso = 0
+            flash('Senha alterada com sucesso!', 'success')
+            return redirect(url_for('index'))
+            
+    return render_template('primeiro_acesso.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# --- ROTAS DE CADASTRO DE USUÁRIOS (CONFIGURAÇÕES) ---
+
+@app.route('/configuracoes/usuarios', methods=['GET', 'POST'])
+@login_required
+def cadastro_usuario():
+    # Controle de Permissão (apenas Gerente e Coordenador podem criar usuários)
+    # if current_user.nivel_acesso not in ['Gerente', 'Coordenador']:
+    #     flash('Acesso não autorizado.', 'error')
+    #     return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        try:
+            nome = request.form.get('nome')
+            sexo = request.form.get('sexo')
+            drt = request.form.get('drt')
+            celular = request.form.get('celular')
+            ramal = request.form.get('ramal')
+            email = request.form.get('email')
+            nivel = request.form.get('nivel')
+            
+            # A senha inicial é o DRT
+            senha_inicial = generate_password_hash(drt)
+            
+            conn = get_cadastro_conn()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO usuarios (nome_completo, sexo, drt, celular, ramal, email, nivel_acesso, senha_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (nome, sexo, drt, celular, ramal, email, nivel, senha_inicial))
+            conn.commit()
+            conn.close()
+            
+            flash('Usuário cadastrado com sucesso!', 'success')
+        except sqlite3.IntegrityError:
+            flash('Erro: Este e-mail já está cadastrado.', 'error')
+        except Exception as e:
+            flash(f'Erro ao cadastrar: {str(e)}', 'error')
+            
+    return render_template('cadastro_usuario.html')
+
+# --- ROTAS PRINCIPAIS (PROTEGIDAS) ---
 
 @app.route('/')
+@login_required
 def index():
+    if current_user.primeiro_acesso == 1: return redirect(url_for('primeiro_acesso'))
     return render_template('index.html')
 
 @app.route('/producao')
+@login_required
 def producao_index():
     return render_template('producao_index.html')
 
 @app.route('/producao/cirurgica')
+@login_required
 def producao_cirurgica():
     return render_template('producao.html')
 
 @app.route('/medicos')
+@login_required
 def medicos_index():
     return render_template('medicos_index.html')
 
 @app.route('/medicos/cadastro')
+@login_required
 def medicos_cadastro():
     return render_template('medicos.html')
 
 @app.route('/consulta')
+@login_required
 def consulta():
     return render_template('consulta.html')
 
-# --- ROTAS AMBULATORIAL ---
+# --- ROTAS AMBULATORIAL (PROTEGIDAS) ---
 
 @app.route('/ambulatorial')
+@login_required
 def ambulatorial_index():
     return render_template('ambulatorial_index.html')
 
 @app.route('/ambulatorial/robo')
+@login_required
 def ambulatorial_robo():
     return render_template('amb_robo.html')
 
 @app.route('/ambulatorial/visualizar')
+@login_required
 def ambulatorial_visualizar():
-    """Nova Landing Page de Visualização"""
     return render_template('amb_visualizacao_index.html')
 
 @app.route('/ambulatorial/visualizar/dashboard')
+@login_required
 def ambulatorial_dashboard():
     return "<h1>Dashboard em construção...</h1><a href='/ambulatorial/visualizar'>Voltar</a>"
 
 @app.route('/ambulatorial/visualizar/tabelas')
+@login_required
 def ambulatorial_tabelas():
-    """Visualização em Tabela com Filtros e Cálculos"""
     return render_template('amb_tabelas.html')
 
-# --- ROTAS DE UPLOAD MANUAL ---
+# --- ROTAS DE UPLOAD MANUAL (PROTEGIDAS) ---
 
 @app.route('/ambulatorial/manual')
+@login_required
 def ambulatorial_manual_page():
     return render_template('amb_manual.html')
 
 @app.route('/ambulatorial/manual/analisar', methods=['POST'])
+@login_required
 def ambulatorial_analisar():
+    # ... (Lógica mantida igual à anterior) ...
+    # Apenas adicionei o @login_required acima
     if 'file' not in request.files:
         return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'})
     
@@ -138,7 +291,9 @@ def ambulatorial_analisar():
                 except: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=',', encoding='latin1')
             else:
                 try: df_meta = pd.read_excel(filepath, header=None, nrows=5)
-                except: df_meta = pd.read_html(filepath, decimal=',', thousands='.', header=None)[0].iloc[:5]
+                except: 
+                    dfs = pd.read_html(filepath, decimal=',', thousands='.', header=None)
+                    df_meta = dfs[0].iloc[:5]
         except Exception as e:
             os.remove(filepath)
             return jsonify({'success': False, 'message': f'Erro ao ler metadados: {str(e)}'})
@@ -177,7 +332,9 @@ def ambulatorial_analisar():
         return jsonify({'success': False, 'message': f'Erro crítico na análise: {str(e)}'})
 
 @app.route('/ambulatorial/manual/confirmar', methods=['POST'])
+@login_required
 def ambulatorial_confirmar():
+    # ... (Lógica mantida igual à anterior) ...
     data = request.get_json()
     filename = data.get('filename')
     if not filename: return jsonify({'success': False, 'message': 'Nome de arquivo inválido.'})
@@ -188,7 +345,6 @@ def ambulatorial_confirmar():
     try:
         ext = filename.rsplit('.', 1)[1].lower()
         
-        # Re-leitura para segurança
         df_meta = None
         if ext == 'csv':
             try: df_meta = pd.read_csv(filepath, header=None, nrows=5, sep=';', encoding='latin1')
@@ -214,7 +370,6 @@ def ambulatorial_confirmar():
             mes_arquivo, ano_arquivo = partes[0].capitalize(), int(partes[1])
         except: mes_arquivo, ano_arquivo = val_f3, 0
 
-        # Leitura de Dados
         df_preview = None
         if ext == 'csv':
             try: df_preview = pd.read_csv(filepath, header=None, nrows=15, sep=';', encoding='latin1')
@@ -246,7 +401,7 @@ def ambulatorial_confirmar():
         conn = get_amb_conn()
         cursor = conn.cursor()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        usuario = 'bot'
+        usuario = current_user.email # Usa o email do usuário logado
 
         registros = 0
         for _, row in df_trabalho.iterrows():
@@ -273,49 +428,37 @@ def ambulatorial_confirmar():
 
     except Exception as e: return jsonify({'success': False, 'message': f'Erro no processamento: {str(e)}'})
 
-# --- APIS PARA VISUALIZAÇÃO ---
+# --- APIS DE LEITURA ---
+# As APIs GET públicas (ex: api/medicos) podem ou não ser protegidas.
+# Para segurança, vou protegê-las também.
 
 @app.route('/api/ambulatorial/filtros', methods=['GET'])
+@login_required
 def get_filtros_ambulatorial():
-    """Retorna listas únicas de Especialidades, Meses e Anos para os filtros"""
     conn = get_amb_conn()
     cursor = conn.cursor()
     try:
-        # Buscamos de ambas as tabelas (union) para ter filtros completos
-        # (Ou apenas de producao_amb se for o foco inicial, mas melhor ter tudo)
-        filtros = {
-            "especialidades": [],
-            "meses": [],
-            "anos": []
-        }
-        
-        # Query unificada
+        filtros = {"especialidades": [], "meses": [], "anos": []}
         for campo in ["especialidade", "mes", "ano"]:
-            # SQL simples para pegar distintos
             query = f"SELECT DISTINCT {campo} FROM producao_amb ORDER BY {campo}"
             cursor.execute(query)
             filtros[f"{campo}s" if campo != "mes" else "meses"] = [row[0] for row in cursor.fetchall() if row[0]]
-            
         return jsonify(filtros)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+    except Exception as e: return jsonify({'error': str(e)}), 500
+    finally: conn.close()
 
 @app.route('/api/ambulatorial/dados', methods=['GET'])
+@login_required
 def get_dados_ambulatorial():
-    """Retorna dados filtrados com os cálculos de porcentagem"""
+    # ... (Lógica mantida igual) ...
     esp = request.args.get('especialidade')
     mes = request.args.get('mes')
     ano = request.args.get('ano')
-    
     conn = get_amb_conn()
     cursor = conn.cursor()
-    
     try:
         query = "SELECT * FROM producao_amb WHERE 1=1"
         params = []
-        
         if esp and esp != "Todas":
             query += " AND especialidade = ?"
             params.append(esp)
@@ -325,44 +468,32 @@ def get_dados_ambulatorial():
         if ano and ano != "Todos":
             query += " AND ano = ?"
             params.append(ano)
-            
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        
         resultados = []
         for row in rows:
             d = dict(row)
-            
-            # Cálculos (Evitando divisão por zero)
             oferta = d.get('oferta', 0) or 0
             agendado = d.get('agendado', 0) or 0
             realizado = d.get('realizado', 0) or 0
             
-            # Taxa Absenteísmo: 1 - (Realizado / Agendado)
-            if agendado > 0:
-                taxa_abs = (1 - (realizado / agendado)) * 100
-            else:
-                taxa_abs = 0.0 # Ou 100? Se nada foi agendado, tecnicamente não há absenteísmo calculável, mantendo 0 por segurança
-                
-            # Perda Primária: 1 - (Agendado / Ofertado)
-            if oferta > 0:
-                taxa_perda = (1 - (agendado / oferta)) * 100
-            else:
-                taxa_perda = 0.0
+            if agendado > 0: taxa_abs = (1 - (realizado / agendado)) * 100
+            else: taxa_abs = 0.0
+            if oferta > 0: taxa_perda = (1 - (agendado / oferta)) * 100
+            else: taxa_perda = 0.0
             
             d['taxa_absenteismo'] = round(taxa_abs, 2)
             d['taxa_perda_primaria'] = round(taxa_perda, 2)
             resultados.append(d)
-            
         return jsonify(resultados)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+    except Exception as e: return jsonify({'error': str(e)}), 500
+    finally: conn.close()
 
-# --- API LEGADAS (MANTIDAS) ---
+# --- APIS RESTANTES (Protegidas) ---
 @app.route('/api/search_procedimento')
+@login_required
 def search_procedimento():
+    # ... (Mesma lógica) ...
     term = request.args.get('term', '')
     if len(term) < 3: return jsonify([])
     conn = get_producao_conn()
@@ -388,7 +519,9 @@ def search_procedimento():
     return jsonify(resultado)
 
 @app.route('/api/submit_producao', methods=['POST'])
+@login_required
 def submit_producao():
+    # ... (Mesma lógica) ...
     data = request.get_json()
     conn = get_producao_conn()
     cursor = conn.cursor()
@@ -412,7 +545,9 @@ def submit_producao():
     finally: conn.close()
 
 @app.route('/api/producao_mensal', methods=['GET'])
+@login_required
 def get_producao_mensal():
+    # ... (Mesma lógica) ...
     cod, mes = request.args.get('codigo_sigtap'), int(request.args.get('mes', 0))
     col = COLUNAS_MESES.get(mes)
     if not cod or not col: return jsonify({'error': 'Inválido'}), 400
@@ -430,7 +565,9 @@ def get_producao_mensal():
     finally: conn.close()
 
 @app.route('/api/historico', methods=['GET'])
+@login_required
 def get_historico():
+    # ... (Mesma lógica) ...
     cod = request.args.get('codigo_sigtap')
     if not cod: return jsonify({'data': []}), 400
     conn = get_producao_conn()
@@ -445,6 +582,7 @@ def get_historico():
     return jsonify({'data': hist})
 
 @app.route('/api/analise_ia', methods=['POST'])
+@login_required
 def analise_ia():
     if not GEMINI_API_KEY: return jsonify({'error': 'Sem chave API configurada'}), 500
     data = request.get_json()
@@ -455,7 +593,9 @@ def analise_ia():
     except Exception as e: return jsonify({'error': str(e)}), 500
 
 @app.route('/api/medicos', methods=['GET'])
+@login_required
 def get_medicos():
+    # ... (Mesma lógica) ...
     conn = get_medicos_conn()
     try:
         cursor = conn.cursor()
@@ -466,7 +606,9 @@ def get_medicos():
     finally: conn.close()
 
 @app.route('/api/especialidades_amec', methods=['GET'])
+@login_required
 def get_especialidades_amec():
+    # ... (Mesma lógica) ...
     conn = get_medicos_conn()
     try:
         cursor = conn.cursor()
@@ -477,7 +619,9 @@ def get_especialidades_amec():
     finally: conn.close()
 
 @app.route('/api/medicos', methods=['POST'])
+@login_required
 def add_medico():
+    # ... (Mesma lógica) ...
     data = request.get_json()
     conn = get_medicos_conn()
     try:
@@ -492,7 +636,9 @@ def add_medico():
     finally: conn.close()
 
 @app.route('/api/medicos/<int:id>', methods=['PUT'])
+@login_required
 def update_medico(id):
+    # ... (Mesma lógica) ...
     data = request.get_json()
     conn = get_medicos_conn()
     try:
@@ -508,6 +654,7 @@ def update_medico(id):
     finally: conn.close()
 
 @app.route('/api/siresp/sync', methods=['POST'])
+@login_required
 def siresp_sync():
     def generate():
         yield json.dumps({"status": "info", "message": "Iniciando robô..."}) + "\n"

@@ -19,7 +19,10 @@
                 </div>
                 <h1 class="text-xl font-bold text-gray-800">SISTEMA DE GESTÃO AME</h1>
             </div>
-            <div class="text-sm text-gray-500">v2.5</div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-600">Olá, {{ current_user.nome }}</span>
+                <a href="/logout" class="text-sm text-red-600 hover:underline font-medium">Sair</a>
+            </div>
         </div>
     </header>
 
@@ -33,7 +36,6 @@
             <!-- 1. Médicos (ATIVO) -->
             <a href="/medicos" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
                 <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <!-- Ícone Médico -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -43,10 +45,9 @@
             </a>
 
             <!-- 2. Empresas (INATIVO) -->
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden">
+            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">
                 <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
                 <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
-                    <!-- Ícone Prédio -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
@@ -56,10 +57,9 @@
             </div>
 
             <!-- 3. Faturamento (INATIVO) -->
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden">
+            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">
                 <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
                 <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
-                    <!-- Ícone Dinheiro -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -71,7 +71,6 @@
             <!-- 4. Produção (ATIVO) -->
             <a href="/producao" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
                 <div class="w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <!-- Ícone Prancheta -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
@@ -81,10 +80,9 @@
             </a>
 
             <!-- 5. Metas (INATIVO) -->
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden">
+            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">
                 <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
                 <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
-                    <!-- Ícone Alvo -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -93,25 +91,23 @@
                 <p class="text-sm text-gray-400 mt-2">Indicadores e objetivos</p>
             </div>
 
-            <!-- 6. Configurações (INATIVO) -->
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden">
-                <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
-                <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
-                    <!-- Ícone Engrenagem -->
+            <!-- 6. Configurações (ATIVO) -->
+            <a href="/configuracoes/usuarios" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
+                <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center mb-4 group-hover:bg-slate-600 group-hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-500">Configurações</h3>
-                <p class="text-sm text-gray-400 mt-2">Parâmetros do sistema</p>
-            </div>
+                <h3 class="text-lg font-bold text-gray-800 group-hover:text-slate-600">Configurações</h3>
+                <p class="text-sm text-gray-500 mt-2">Cadastro de usuários</p>
+            </a>
 
         </div>
     </div>
 
     <footer class="text-center text-gray-400 text-sm mt-10 pb-6">
-        Sistema Integrado de Gestão Hospitalar v2.5
+        Sistema Integrado de Gestão Hospitalar v3.0
     </footer>
 
 </body>
