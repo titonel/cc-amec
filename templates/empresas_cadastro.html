@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -173,4 +174,181 @@
         });
     </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Empresas - AME Caraguatatuba</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center gap-2 text-blue-600 font-bold text-xl hover:text-blue-700 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Voltar
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500">Usuário: {{ current_user.nome }}</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-4xl p-8 mt-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Cadastro de Empresa Médica</h2>
+
+        <!-- Etapa 1: Upload -->
+        <div id="step-upload" class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">1. Carregar Contrato (PDF)</h3>
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 text-sm text-blue-700 mb-4">
+                O sistema usará inteligência artificial para ler o PDF e preencher os dados automaticamente.
+            </div>
+            <form id="upload-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Selecione o arquivo do contrato</label>
+                    <input type="file" id="file-upload" accept=".pdf" class="w-full border rounded p-2" required>
+                </div>
+                <button type="submit" id="btn-upload" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
+                    Processar Contrato
+                </button>
+            </form>
+        </div>
+
+        <!-- Etapa 2: Validação e Cadastro -->
+        <div id="step-form" class="bg-white rounded-xl shadow-lg p-8 hidden">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">2. Validar e Complementar Dados</h3>
+            
+            <form id="save-form" class="space-y-6">
+                <input type="hidden" id="filename-hidden">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Razão Social</label>
+                        <input type="text" id="razao_social" class="w-full border rounded px-3 py-2 bg-gray-50 font-semibold text-gray-800" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">CNPJ</label>
+                        <input type="text" id="cnpj" class="w-full border rounded px-3 py-2 bg-gray-50" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Data Celebração</label>
+                        <input type="text" id="data" class="w-full border rounded px-3 py-2 bg-gray-50">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Objeto do Contrato</label>
+                        <textarea id="objeto" rows="3" class="w-full border rounded px-3 py-2 bg-gray-50"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Escopo Detectado (Tabelas)</label>
+                    <div class="bg-gray-100 p-4 rounded text-xs font-mono overflow-x-auto h-48 border" id="escopo-preview">
+                        <!-- JSON preview -->
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">* Os dados tabulares foram extraídos para conferência.</p>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-4 border-t">
+                    <button type="button" onclick="location.reload()" class="text-gray-600 hover:underline">Cancelar</button>
+                    <button type="submit" class="bg-green-600 text-white font-bold py-2 px-8 rounded hover:bg-green-700 transition shadow">
+                        Confirmar e Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const saveForm = document.getElementById('save-form');
+        const stepUpload = document.getElementById('step-upload');
+        const stepForm = document.getElementById('step-form');
+        const btnUpload = document.getElementById('btn-upload');
+
+        let escopoData = [];
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('file-upload');
+            if(fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            btnUpload.disabled = true;
+            btnUpload.textContent = "Lendo PDF...";
+
+            try {
+                const res = await fetch('/empresas/upload', { method: 'POST', body: formData });
+                const result = await res.json();
+
+                if (result.success) {
+                    // Preencher formulário
+                    document.getElementById('razao_social').value = result.data.razao_social || '';
+                    document.getElementById('cnpj').value = result.data.cnpj || '';
+                    document.getElementById('objeto').value = result.data.objeto || '';
+                    document.getElementById('data').value = result.data.data || '';
+                    document.getElementById('filename-hidden').value = result.filename;
+                    
+                    escopoData = result.data.escopo;
+                    document.getElementById('escopo-preview').innerText = JSON.stringify(escopoData, null, 2);
+
+                    // Trocar view
+                    stepUpload.classList.add('hidden');
+                    stepForm.classList.remove('hidden');
+                } else {
+                    alert("Erro: " + result.message);
+                    btnUpload.disabled = false;
+                    btnUpload.textContent = "Processar Contrato";
+                }
+            } catch (err) {
+                alert("Erro de conexão.");
+                btnUpload.disabled = false;
+                btnUpload.textContent = "Processar Contrato";
+            }
+        });
+
+        saveForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                razao_social: document.getElementById('razao_social').value,
+                cnpj: document.getElementById('cnpj').value,
+                objeto: document.getElementById('objeto').value,
+                data: document.getElementById('data').value,
+                filename: document.getElementById('filename-hidden').value,
+                escopo: escopoData
+            };
+
+            try {
+                const res = await fetch('/empresas/salvar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                
+                if(result.success) {
+                    alert("Empresa cadastrada com sucesso!");
+                    window.location.href = "/"; // Volta para Home
+                } else {
+                    alert("Erro ao salvar: " + result.message);
+                }
+            } catch(err) {
+                alert("Erro de conexão ao salvar.");
+            }
+        });
+    </script>
+</body>
+>>>>>>> 6cc9412df22c56df6575e2cbadcede1c988931ae
 </html>
