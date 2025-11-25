@@ -5,9 +5,14 @@ import re
 import unicodedata
 
 # --- CONFIGURAÇÃO ---
-DB_NAME = 'medicos.db'
+DB_FOLDER = 'db'
+DB_NAME = os.path.join(DB_FOLDER, 'medicos.db')
 ARQUIVO_CSV = os.path.join('matrizes', 'medicos.csv')
 ARQUIVO_ESPECIALIDADES_AMEC = os.path.join('matrizes', 'especialidades-amec.csv')
+
+# Garante que a pasta db existe
+if not os.path.exists(DB_FOLDER):
+    os.makedirs(DB_FOLDER)
 
 # Colunas definidas na especificação
 COLUNAS_ESPERADAS = [
@@ -105,7 +110,6 @@ def configurar_banco_medicos():
     for col in df.columns:
         col_norm = normalizar_texto(col)
         match = None
-        # ... (Lógica de mapeamento mantida igual) ...
         if 'nome' in col_norm: match = 'nome'
         elif 'crm' in col_norm: match = 'crm'
         elif 'nasc' in col_norm or col_norm == 'dn': match = 'dn'
@@ -164,7 +168,5 @@ def configurar_banco_medicos():
     conn.close()
 
 if __name__ == '__main__':
-    # Importa a tabela auxiliar de especialidades
     importar_especialidades_amec()
-    # Importa os médicos
     configurar_banco_medicos()

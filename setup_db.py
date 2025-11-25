@@ -5,8 +5,13 @@ import re
 import unicodedata
 
 # --- CONFIGURAÇÃO ---
-DB_NAME = 'producao_cirurgica.db'
+DB_FOLDER = 'db'
+DB_NAME = os.path.join(DB_FOLDER, 'producao_cirurgica.db')
 PASTA_MATRIZES = 'matrizes'
+
+# Garante que a pasta db existe
+if not os.path.exists(DB_FOLDER):
+    os.makedirs(DB_FOLDER)
 
 # Caminhos
 ARQUIVO_PROCEDIMENTOS = os.path.join(PASTA_MATRIZES, 'procedimentos.csv')
@@ -25,7 +30,7 @@ def inicializar_tabelas():
     conn = get_db_conn()
     cursor = conn.cursor()
     
-    print("--- Inicializando Estrutura do Banco de Dados ---")
+    print(f"--- Inicializando Estrutura do Banco de Dados: {DB_NAME} ---")
 
     # 1. Tabela Procedimentos (Padronizado para codigo_sigtap)
     cursor.execute("""

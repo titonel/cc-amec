@@ -1,11 +1,15 @@
 import sqlite3
 import os
 
-DB_NAME = 'amb.db'
+DB_FOLDER = 'db'
+DB_NAME = os.path.join(DB_FOLDER, 'amb.db')
 
 def setup_db():
     print(f"--- Configurando banco de dados: {DB_NAME} ---")
     
+    if not os.path.exists(DB_FOLDER):
+        os.makedirs(DB_FOLDER)
+
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
