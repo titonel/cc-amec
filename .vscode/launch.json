@@ -4,11 +4,11 @@
 
         {
             "name": "Python: Arquivo Atual",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true # type: ignore
+            "justMyCode": true
         }
 
     ]
