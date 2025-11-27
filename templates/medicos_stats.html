@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas do Corpo Clínico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto max-w-6xl p-4 flex items-center gap-4">
+            <a href="/medicos" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar
+            </a>
+            <h1 class="text-xl font-bold text-blue-600">DASHBOARD DO CORPO CLÍNICO</h1>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-7xl p-6">
+
+        <div class="mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+            <h2 class="text-gray-700 text-lg font-semibold">Visão Geral Demográfica</h2>
+            <div class="text-sm text-gray-500">
+                Total de Médicos Ativos: <span id="total-medicos" class="font-bold text-blue-600 text-lg">---</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Faixa Etária -->
+            <div class="bg-white p-6 rounded-lg shadow h-96">
+                <h3 class="text-gray-600 font-bold mb-4 text-center">Distribuição por Faixa Etária</h3>
+                <div class="relative h-72">
+                    <canvas id="chartFaixaEtaria"></canvas>
+                </div>
+            </div>
+
+            <!-- Sexo -->
+            <div class="bg-white p-6 rounded-lg shadow h-96">
+                <h3 class="text-gray-600 font-bold mb-4 text-center">Distribuição por Sexo</h3>
+                <div class="relative h-72 w-72 mx-auto">
+                    <canvas id="chartSexo"></canvas>
+                </div>
+            </div>
+
+            <!-- Naturalidade -->
+            <div class="bg-white p-6 rounded-lg shadow h-96">
+                <h3 class="text-gray-600 font-bold mb-4 text-center">Origem (Top 10 Cidades de Nascimento)</h3>
+                <div class="relative h-72">
+                    <canvas id="chartOrigem"></canvas>
+                </div>
+            </div>
+
+            <!-- Residência -->
+            <div class="bg-white p-6 rounded-lg shadow h-96">
+                <h3 class="text-gray-600 font-bold mb-4 text-center">Residência (Top 10 Cidades)</h3>
+                <div class="relative h-72">
+                    <canvas id="chartResidencia"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        async function loadCharts() {
+            try {
+                const res = await fetch('/api/medicos/stats');
+                const data = await res.json();
+
+                document.getElementById('total-medicos').innerText = data.total;
+
+                // Cores padrão
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+                // 1. Faixa Etária (Barra)
+                new Chart(document.getElementById('chartFaixaEtaria'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(data.faixa_etaria),
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: Object.values(data.faixa_etaria),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // 2. Sexo (Doughnut)
+                new Chart(document.getElementById('chartSexo'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(data.sexo),
+                        datasets: [{
+                            data: Object.values(data.sexo),
+                            backgroundColor: ['#3b82f6', '#ec4899', '#9ca3af'] // Azul, Rosa, Cinza
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // 3. Origem (Barra Horizontal)
+                new Chart(document.getElementById('chartOrigem'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(data.origem),
+                        datasets: [{
+                            label: 'Médicos',
+                            data: Object.values(data.origem),
+                            backgroundColor: '#8b5cf6',
+                            indexAxis: 'y'
+                        }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // 4. Residência (Barra Horizontal)
+                new Chart(document.getElementById('chartResidencia'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(data.residencia),
+                        datasets: [{
+                            label: 'Médicos',
+                            data: Object.values(data.residencia),
+                            backgroundColor: '#10b981',
+                            indexAxis: 'y'
+                        }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                alert("Erro ao carregar estatísticas.");
+            }
+        }
+
+        loadCharts();
+    </script>
+</body>
+</html>

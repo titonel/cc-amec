@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 
 # Configuração de Caminhos
 DB_FOLDER = 'db'
-ARQUIVOS_DB = ['medicos.db', 'producao_cirurgica.db', 'amb.db'] 
+ARQUIVOS_DB = ['medicos.db', 'producao_cirurgica.db', 'amb.db']
 DB_CADASTRO = os.path.join(DB_FOLDER, 'cadastro.db')
 
 def setup_environment():
@@ -13,19 +13,13 @@ def setup_environment():
 
     if not os.path.exists(DB_FOLDER):
         os.makedirs(DB_FOLDER)
-        print(f"Pasta '{DB_FOLDER}' criada.")
 
-    for db_file in ARQUIVOS_DB:
-        if os.path.exists(db_file):
-            destino = os.path.join(DB_FOLDER, db_file)
-            if not os.path.exists(destino):
-                shutil.move(db_file, destino)
-                print(f"Arquivo '{db_file}' movido para '{DB_FOLDER}/'.")
-
+    # 1. Configurar Banco de Cadastro
     conn = sqlite3.connect(DB_CADASTRO)
     cursor = conn.cursor()
 
-    # 1. Tabela de Usuários
+    # Tabela Usuários (Mantida - Cuidado: se quiser resetar usuarios, descomente a linha abaixo)
+    # cursor.execute("DROP TABLE IF EXISTS usuarios")
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,39 +35,59 @@ def setup_environment():
     )
     """)
 
-    # 2. NOVA TABELA: Empresas
-    # escopo_json armazenará a tabela de metas extraída do contrato
+    # --- ATUALIZAÇÃO DO SCHEMA ---
+    # Remove tabelas antigas para garantir a nova estrutura
+    print("Recriando tabelas 'empresas' e 'contratos'...")
+    cursor.execute("DROP TABLE IF EXISTS empresas")
+    cursor.execute("DROP TABLE IF EXISTS contratos")
+
+    # Tabela Empresas (Atualizada com data_contratacao)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS empresas (
+    CREATE TABLE empresas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         razao_social TEXT,
         cnpj TEXT,
         objeto_contrato TEXT,
-        data_celebracao TEXT,
-        escopo_json TEXT, 
+        data_contratacao TEXT,
+        ativo INTEGER DEFAULT 1,
+        data_inativacao TEXT,
         arquivo_contrato TEXT,
+        escopo_json TEXT,
+        usuario_cadastro TEXT,
         data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
-    # Bootstrap Usuários (Mantido)
+    # Tabela Contratos (Nova)
+    cursor.execute("""
+    CREATE TABLE contratos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        empresa_id INTEGER,
+        servico TEXT,
+        quantidade INTEGER,
+        valor_unitario REAL,
+        data_contratacao TEXT,
+        vigencia_meses INTEGER,
+        ativo INTEGER DEFAULT 1,
+        usuario_cadastro TEXT,
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(empresa_id) REFERENCES empresas(id)
+    )
+    """)
+
+    # Bootstrap Admin (se necessário)
     cursor.execute("SELECT count(*) FROM usuarios")
     if cursor.fetchone()[0] == 0:
-        usuarios_iniciais = [
-            {"nome": "Administrador Geral", "sexo": "M", "drt": "00000", "celular": "00000", "email": "admin@amecaragua.org.br", "nivel": "Gerente"},
-            {"nome": "Saulo Bastos", "sexo": "M", "drt": "11111", "celular": "00000", "email": "saulo.bastos@amecaragua.org.br", "nivel": "Gerente"}
-        ]
-        senha_padrao_hash = generate_password_hash("123456")
-        for u in usuarios_iniciais:
-            cursor.execute("""
-                INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash, primeiro_acesso)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (u['nome'], u['sexo'], u['drt'], u['celular'], u['email'], u['nivel'], senha_padrao_hash, 1))
-            print(f"Usuário criado: {u['email']}")
+        pass_hash = generate_password_hash("123456")
+        cursor.execute("INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash) VALUES (?,?,?,?,?,?,?)",
+                       ("Admin", "M", "0000", "0000", "admin@amecaragua.org.br", "Gerente", pass_hash))
+        # Adiciona segundo usuário solicitado anteriormente
+        cursor.execute("INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash) VALUES (?,?,?,?,?,?,?)",
+                       ("Saulo Bastos", "M", "11111", "0000", "saulo.bastos@amecaragua.org.br", "Gerente", pass_hash))
 
     conn.commit()
     conn.close()
-    print("Banco de dados de cadastro configurado com sucesso.")
+    print("Banco de dados 'cadastro.db' reconfigurado com sucesso.")
 
 if __name__ == '__main__':
     setup_environment()

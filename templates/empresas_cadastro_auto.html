@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Automático - AME Caraguatatuba</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="/empresas/cadastro" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Voltar
+                </a>
+                <h1 class="text-xl font-bold text-gray-800">Cadastro Automático via Contrato</h1>
+            </div>
+            <div class="text-sm text-gray-500">{{ current_user.nome }}</div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-5xl p-8">
+
+        <!-- Passo 1: Upload -->
+        <div id="step-1" class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">1. Upload do Contrato (PDF)</h3>
+            <form id="form-upload" class="flex items-end gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Selecione o arquivo</label>
+                    <input type="file" id="file-input" accept=".pdf" class="w-full border rounded p-2 bg-gray-50" required>
+                </div>
+                <button type="submit" id="btn-processar" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
+                    Processar Arquivo
+                </button>
+            </form>
+        </div>
+
+        <!-- Passo 2: Validação -->
+        <div id="step-2" class="hidden bg-white rounded-xl shadow-lg p-8">
+            <h3 class="text-lg font-bold text-gray-700 mb-6 border-b pb-2">2. Validação dos Dados Extraídos</h3>
+
+            <form id="form-salvar">
+                <input type="hidden" id="hidden-filename">
+
+                <!-- Dados da Empresa -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Razão Social</label>
+                        <input type="text" id="razao_social" class="w-full bg-white border rounded px-3 py-2 font-semibold text-gray-800" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">CNPJ</label>
+                        <input type="text" id="cnpj" class="w-full bg-white border rounded px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Data Início Contrato</label>
+                        <input type="text" id="data_contratacao" class="w-full bg-white border rounded px-3 py-2" placeholder="DD/MM/AAAA" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Vigência (Meses)</label>
+                        <input type="number" id="vigencia" class="w-full bg-white border rounded px-3 py-2" required>
+                    </div>
+                </div>
+
+                <!-- Tabela de Serviços (Contratos) -->
+                <h4 class="text-md font-bold text-gray-700 mb-2">Serviços Contratados (Itens)</h4>
+                <div class="overflow-x-auto border rounded-lg mb-6">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Serviço</th>
+                                <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase w-24">Qtd.</th>
+                                <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase w-32">Valor Unit.</th>
+                                <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 uppercase w-16">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-servicos" class="bg-white divide-y divide-gray-200">
+                            <!-- Inserido via JS -->
+                        </tbody>
+                    </table>
+                    <div class="p-2 bg-gray-50 text-right">
+                        <button type="button" onclick="adicionarLinha()" class="text-sm text-blue-600 font-bold hover:underline">+ Adicionar Item Manualmente</button>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 border-t pt-4">
+                    <button type="button" onclick="location.reload()" class="text-gray-500 hover:text-gray-700 font-medium">Cancelar</button>
+                    <button type="submit" id="btn-salvar" class="bg-green-600 text-white font-bold py-3 px-8 rounded shadow hover:bg-green-700 transition">
+                        Confirmar e Gravar Dados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const formUpload = document.getElementById('form-upload');
+        const formSalvar = document.getElementById('form-salvar');
+        const listaServicos = document.getElementById('lista-servicos');
+        const btnProcessar = document.getElementById('btn-processar');
+
+        formUpload.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('file-input').files[0];
+            if(!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            btnProcessar.disabled = true;
+            btnProcessar.textContent = "Analisando PDF...";
+
+            try {
+                const res = await fetch('/empresas/upload_auto', { method: 'POST', body: formData });
+                const json = await res.json();
+
+                if(json.success) {
+                    // Preencher Cabeçalho
+                    document.getElementById('hidden-filename').value = json.filename;
+                    document.getElementById('razao_social').value = json.data.razao_social;
+                    document.getElementById('cnpj').value = json.data.cnpj;
+                    document.getElementById('data_contratacao').value = json.data.data_contratacao;
+                    document.getElementById('vigencia').value = json.data.vigencia_meses;
+
+                    // Preencher Tabela
+                    listaServicos.innerHTML = '';
+                    json.data.itens_servico.forEach(item => {
+                        adicionarLinha(item.servico, item.quantidade, item.valor);
+                    });
+
+                    if(json.data.itens_servico.length === 0) {
+                        adicionarLinha("", "", ""); // Linha vazia se nada for achado
+                    }
+
+                    document.getElementById('step-1').classList.add('hidden');
+                    document.getElementById('step-2').classList.remove('hidden');
+                } else {
+                    alert('Erro: ' + json.message);
+                }
+            } catch(err) {
+                alert('Erro de conexão.');
+            } finally {
+                btnProcessar.disabled = false;
+                btnProcessar.textContent = "Processar Arquivo";
+            }
+        });
+
+        function adicionarLinha(servico = '', qtd = '', valor = '') {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-2"><input type="text" class="w-full border rounded p-1 text-sm servico" value="${servico}" placeholder="Descrição"></td>
+                <td class="p-2"><input type="number" class="w-full border rounded p-1 text-sm qtd" value="${qtd}"></td>
+                <td class="p-2"><input type="text" class="w-full border rounded p-1 text-sm valor" value="${valor}"></td>
+                <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-bold">X</button></td>
+            `;
+            listaServicos.appendChild(tr);
+        }
+
+        formSalvar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Coletar itens da tabela
+            const itens = [];
+            document.querySelectorAll('#lista-servicos tr').forEach(tr => {
+                const servico = tr.querySelector('.servico').value;
+                if(servico) {
+                    itens.push({
+                        servico: servico,
+                        quantidade: tr.querySelector('.qtd').value,
+                        valor: tr.querySelector('.valor').value
+                    });
+                }
+            });
+
+            const payload = {
+                filename: document.getElementById('hidden-filename').value,
+                razao_social: document.getElementById('razao_social').value,
+                cnpj: document.getElementById('cnpj').value,
+                data_contratacao: document.getElementById('data_contratacao').value,
+                vigencia_meses: document.getElementById('vigencia').value,
+                itens: itens
+            };
+
+            try {
+                const res = await fetch('/empresas/salvar_auto', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+
+                if(json.success) {
+                    alert("Dados gravados com sucesso!");
+                    window.location.href = "/empresas";
+                } else {
+                    alert("Erro ao salvar: " + json.message);
+                }
+            } catch(err) {
+                alert("Erro ao comunicar com o servidor.");
+            }
+        });
+    </script>
+</body>
+</html>

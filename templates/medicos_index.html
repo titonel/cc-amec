@@ -22,11 +22,11 @@
                 </div>
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="/medicos" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Médicos</a>
-                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Empresas</span>
+                    <a href="/empresas" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 text-sm">Empresas</a>
                     <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
                     <a href="/producao" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Produção</a>
                     <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
-                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
+                    <a href="/configuracoes/usuarios" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 text-sm">Configurações</a>
                 </div>
             </div>
         </div>
@@ -46,16 +46,16 @@
                 <p class="text-sm text-gray-500 mt-2">Adicionar, editar e listar médicos</p>
             </a>
 
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">
-                <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
-                <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
+            <!-- Card Estatísticas (ATIVADO) -->
+            <a href="/medicos/estatisticas" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
+                <div class="w-16 h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-500">Estatísticas</h3>
-                <p class="text-sm text-gray-400 mt-2">Indicadores de desempenho clínico</p>
-            </div>
+                <h3 class="text-lg font-bold text-gray-800 group-hover:text-purple-600">Estatísticas</h3>
+                <p class="text-sm text-gray-500 mt-2">Indicadores demográficos do corpo clínico</p>
+            </a>
         </div>
     </div>
 </body>

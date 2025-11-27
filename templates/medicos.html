@@ -40,7 +40,7 @@
     </nav>
 
     <div class="container mx-auto max-w-6xl p-6">
-        
+
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Cadastro de Médicos</h1>
             <button onclick="novoMedico()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition transform hover:scale-105">
@@ -118,10 +118,34 @@
                         <label class="block text-sm font-medium text-gray-700">UF Naturalidade</label>
                         <select id="estado_natural" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
                             <option value="">UF</option>
-                            <option value="SP">SP</option>
-                            <option value="RJ">RJ</option>
+                            <option value="AC">AC</option>
+                            <option value="AL">AL</option>
+                            <option value="AP">AP</option>
+                            <option value="AM">AM</option>
+                            <option value="BA">BA</option>
+                            <option value="CE">CE</option>
+                            <option value="DF">DF</option>
+                            <option value="ES">ES</option>
+                            <option value="GO">GO</option>
+                            <option value="MA">MA</option>
+                            <option value="MT">MT</option>
+                            <option value="MS">MS</option>
                             <option value="MG">MG</option>
-                            <!-- ... outros estados ... -->
+                            <option value="PA">PA</option>
+                            <option value="PB">PB</option>
+                            <option value="PR">PR</option>
+                            <option value="PE">PE</option>
+                            <option value="PI">PI</option>
+                            <option value="RJ">RJ</option>
+                            <option value="RN">RN</option>
+                            <option value="RS">RS</option>
+                            <option value="RO">RO</option>
+                            <option value="RR">RR</option>
+                            <option value="SC">SC</option>
+                            <option value="SP">SP</option>
+                            <option value="SE">SE</option>
+                            <option value="TO">TO</option>
+                            <option value="ZZ">ZZ (Estrangeiro)</option>
                         </select>
                     </div>
                 </div>
@@ -188,8 +212,33 @@
                             <label class="block text-sm font-medium text-gray-700">Estado (UF)</label>
                             <select id="estado_res" class="w-full border rounded px-3 py-2 bg-white focus:ring-blue-500">
                                 <option value="">UF</option>
+                                <option value="AC">AC</option>
+                                <option value="AL">AL</option>
+                                <option value="AP">AP</option>
+                                <option value="AM">AM</option>
+                                <option value="BA">BA</option>
+                                <option value="CE">CE</option>
+                                <option value="DF">DF</option>
+                                <option value="ES">ES</option>
+                                <option value="GO">GO</option>
+                                <option value="MA">MA</option>
+                                <option value="MT">MT</option>
+                                <option value="MS">MS</option>
+                                <option value="MG">MG</option>
+                                <option value="PA">PA</option>
+                                <option value="PB">PB</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="PI">PI</option>
+                                <option value="RJ">RJ</option>
+                                <option value="RN">RN</option>
+                                <option value="RS">RS</option>
+                                <option value="RO">RO</option>
+                                <option value="RR">RR</option>
+                                <option value="SC">SC</option>
                                 <option value="SP">SP</option>
-                                <!-- ... -->
+                                <option value="SE">SE</option>
+                                <option value="TO">TO</option>
                             </select>
                         </div>
                     </div>
@@ -246,7 +295,7 @@
             document.getElementById('medico-id').value = '';
             document.getElementById('form-title').innerText = 'Novo Médico';
             document.getElementById('ativo').checked = true;
-            sexoToggle.checked = false; 
+            sexoToggle.checked = false;
             updateSexoLabel();
             formContainer.classList.remove('hidden');
             formContainer.scrollIntoView({ behavior: 'smooth' });
