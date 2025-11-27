@@ -18,8 +18,7 @@ def setup_environment():
     conn = sqlite3.connect(DB_CADASTRO)
     cursor = conn.cursor()
 
-    # Tabela Usuários (Mantida - Cuidado: se quiser resetar usuarios, descomente a linha abaixo)
-    # cursor.execute("DROP TABLE IF EXISTS usuarios")
+    # Tabela Usuários (Mantida)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,15 +35,15 @@ def setup_environment():
     """)
 
     # --- ATUALIZAÇÃO DO SCHEMA ---
-    # Remove tabelas antigas para garantir a nova estrutura
-    print("Recriando tabelas 'empresas' e 'contratos'...")
+    print("Recriando tabelas 'empresas' e 'contratos' com nova coluna 'empresa_id'...")
     cursor.execute("DROP TABLE IF EXISTS empresas")
     cursor.execute("DROP TABLE IF EXISTS contratos")
 
-    # Tabela Empresas (Atualizada com data_contratacao)
+    # Tabela Empresas (Atualizada com empresa_id)
     cursor.execute("""
     CREATE TABLE empresas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        empresa_id TEXT UNIQUE, -- Identificador Único Gerado (UUID)
         razao_social TEXT,
         cnpj TEXT,
         objeto_contrato TEXT,
@@ -58,11 +57,12 @@ def setup_environment():
     )
     """)
 
-    # Tabela Contratos (Nova)
+    # Tabela Contratos (Atualizada com empresa_id)
+    # Agora empresa_id armazena o UUID, não mais o ID numérico sequencial da tabela empresas
     cursor.execute("""
     CREATE TABLE contratos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        empresa_id INTEGER,
+        empresa_id TEXT, -- Vínculo via UUID
         servico TEXT,
         quantidade INTEGER,
         valor_unitario REAL,
@@ -70,8 +70,7 @@ def setup_environment():
         vigencia_meses INTEGER,
         ativo INTEGER DEFAULT 1,
         usuario_cadastro TEXT,
-        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(empresa_id) REFERENCES empresas(id)
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -81,7 +80,6 @@ def setup_environment():
         pass_hash = generate_password_hash("123456")
         cursor.execute("INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash) VALUES (?,?,?,?,?,?,?)",
                        ("Admin", "M", "0000", "0000", "admin@amecaragua.org.br", "Gerente", pass_hash))
-        # Adiciona segundo usuário solicitado anteriormente
         cursor.execute("INSERT INTO usuarios (nome_completo, sexo, drt, celular, email, nivel_acesso, senha_hash) VALUES (?,?,?,?,?,?,?)",
                        ("Saulo Bastos", "M", "11111", "0000", "saulo.bastos@amecaragua.org.br", "Gerente", pass_hash))
 
