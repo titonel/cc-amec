@@ -1,0 +1,3 @@
+﻿id;empresa_id;servico;quantidade;valor_unitario;data_contratacao;vigencia_meses;ativo;usuario_cadastro;data_cadastro
+1;1;Neurologia Adulto;250;60.0;15/08/2025;60;1;saulo.bastos@amecaragua.org.br;2025-11-27 18:28:19
+2;1;Neurologia Infantil;20;130.0;15/08/2025;60;1;saulo.bastos@amecaragua.org.br;2025-11-27 18:28:19

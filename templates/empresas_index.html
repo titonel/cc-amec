@@ -37,7 +37,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            <!-- Cadastro (Link para /empresas/cadastro) -->
+            <!-- Cadastro -->
             <a href="/empresas/cadastro" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
                 <div class="w-16 h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -48,17 +48,16 @@
                 <p class="text-sm text-gray-500 mt-2">Inclusão e atualização de prestadores</p>
             </a>
 
-            <!-- Contratos (Em breve) -->
-            <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">
-                <div class="absolute top-3 right-3 bg-gray-300 text-gray-600 text-xs font-bold px-2 py-1 rounded">EM BREVE</div>
-                <div class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mb-4">
+            <!-- Contratos (ATIVADO) -->
+            <a href="/empresas/contratos" class="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-200 hover:-translate-y-1 cursor-pointer">
+                <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-500">Contratos</h3>
-                <p class="text-sm text-gray-400 mt-2">Gestão de vigências e aditivos</p>
-            </div>
+                <h3 class="text-lg font-bold text-gray-800 group-hover:text-blue-600">Contratos</h3>
+                <p class="text-sm text-gray-500 mt-2">Gestão de vigências e aditivos</p>
+            </a>
 
             <!-- Estatísticas (Em breve) -->
             <div class="bg-gray-100 rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center opacity-60 cursor-not-allowed relative overflow-hidden grayscale">

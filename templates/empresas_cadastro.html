@@ -3,173 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Empresas - AME Caraguatatuba</title>
+    <title>Cadastro Manual de Empresa - AME Caraguatatuba</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <style>
+        /* Estilos do Toggle (Switch) */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #10B981;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #10B981;
+        }
+        .toggle-checkbox {
+            right: 6px;
+            top: 2px; /* Ajuste fino */
+            transition: all 0.3s;
+        }
+        .toggle-label {
+            width: 50px;
+            height: 26px;
+            background-color: #D1D5DB; /* Gray-300 */
+            transition: background-color 0.3s;
+        }
+        .toggle-checkbox:checked {
+            right: 2px; /* Posição final */
+            border-color: #10B981;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 
-    <!-- Navbar -->
+    <!-- Navbar Global -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between h-16">
-                <div class="flex items-center">
+                <div class="flex-shrink-0 flex items-center">
                     <a href="/" class="flex items-center gap-2 text-blue-600 font-bold text-xl hover:text-blue-700 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                         </svg>
-                        Voltar
+                        AME Caraguatatuba
                     </a>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-sm text-gray-500">Usuário: {{ current_user.nome }}</span>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="/medicos" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Médicos</a>
+                    <a href="/empresas" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Empresas</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
+                    <a href="/producao" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Produção</a>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
+                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto max-w-4xl p-8 mt-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Cadastro de Empresa Médica</h2>
+    <div class="container mx-auto max-w-3xl p-8 mt-6">
 
-        <!-- Etapa 1: Upload -->
-        <div id="step-upload" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">1. Carregar Contrato (PDF)</h3>
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 text-sm text-blue-700 mb-4">
-                O sistema usará inteligência artificial para ler o PDF e preencher os dados automaticamente.
+        <div class="flex items-center gap-4 mb-6">
+            <a href="/empresas/cadastro" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar
+            </a>
+            <h2 class="text-2xl font-bold text-gray-800">Cadastro Manual de Empresa</h2>
+        </div>
+
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-6 rounded-md {{ 'bg-red-100 text-red-700' if category == 'error' else 'bg-green-100 text-green-700' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="/empresas/cadastro/manual" method="POST" enctype="multipart/form-data" class="bg-white p-8 rounded-lg shadow-lg space-y-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Razão Social -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Razão Social</label>
+                    <input type="text" name="razao_social" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- CNPJ -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CNPJ</label>
+                    <input type="text" name="cnpj" id="cnpj" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="00.000.000/0000-00">
+                </div>
+
+                <!-- Status (Toggle) -->
+                <div class="flex flex-col">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <div class="flex items-center mt-1">
+                        <label for="status-toggle" class="flex items-center cursor-pointer relative">
+                            <input type="checkbox" id="status-toggle" class="sr-only peer" checked> <!-- Default checked -->
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-900" id="status-label">Ativo</span>
+                        </label>
+                        <!-- Campo oculto para enviar o valor (1 ou 0) -->
+                        <input type="hidden" name="ativo" id="status-value" value="1">
+                    </div>
+                </div>
+
+                <!-- Data Cadastro -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data de Cadastramento</label>
+                    <input type="date" name="data_cadastro" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Data Inativação (Condicional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data de Inativação</label>
+                    <input type="date" name="data_inativacao" id="data_inativacao" disabled class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 cursor-not-allowed focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Serviços -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Serviços Oferecidos (Objeto)</label>
+                    <textarea name="servicos" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Descreva os serviços prestados..."></textarea>
+                </div>
+
+                <!-- Upload de Contrato (PDF) - NOVO CAMPO -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contrato Social / Aditivo (PDF)</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label for="contrato-pdf" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Clique para enviar</span> ou arraste o arquivo</p>
+                                <p class="text-xs text-gray-500">PDF (MÁX. 10MB)</p>
+                            </div>
+                            <input id="contrato-pdf" name="contrato_pdf" type="file" accept=".pdf" class="hidden" />
+                        </label>
+                    </div>
+                    <div id="file-name-display" class="mt-2 text-sm text-gray-600 hidden flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="font-medium"></span>
+                    </div>
+                </div>
             </div>
-            <form id="upload-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Selecione o arquivo do contrato</label>
-                    <input type="file" id="file-upload" accept=".pdf" class="w-full border rounded p-2" required>
-                </div>
-                <button type="submit" id="btn-upload" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
-                    Processar Contrato
+
+            <div class="pt-4 flex justify-end gap-4">
+                <a href="/empresas/cadastro" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Cancelar</a>
+                <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition shadow">
+                    Salvar Empresa
                 </button>
-            </form>
-        </div>
-
-        <!-- Etapa 2: Validação e Cadastro -->
-        <div id="step-form" class="bg-white rounded-xl shadow-lg p-8 hidden">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">2. Validar e Complementar Dados</h3>
-            
-            <form id="save-form" class="space-y-6">
-                <input type="hidden" id="filename-hidden">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Razão Social</label>
-                        <input type="text" id="razao_social" class="w-full border rounded px-3 py-2 bg-gray-50 font-semibold text-gray-800" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">CNPJ</label>
-                        <input type="text" id="cnpj" class="w-full border rounded px-3 py-2 bg-gray-50" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Data Celebração</label>
-                        <input type="text" id="data" class="w-full border rounded px-3 py-2 bg-gray-50">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Objeto do Contrato</label>
-                        <textarea id="objeto" rows="3" class="w-full border rounded px-3 py-2 bg-gray-50"></textarea>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Escopo Detectado (Tabelas)</label>
-                    <div class="bg-gray-100 p-4 rounded text-xs font-mono overflow-x-auto h-48 border" id="escopo-preview">
-                        <!-- JSON preview -->
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">* Os dados tabulares foram extraídos para conferência.</p>
-                </div>
-
-                <div class="flex justify-end gap-4 pt-4 border-t">
-                    <button type="button" onclick="location.reload()" class="text-gray-600 hover:underline">Cancelar</button>
-                    <button type="submit" class="bg-green-600 text-white font-bold py-2 px-8 rounded hover:bg-green-700 transition shadow">
-                        Confirmar e Salvar
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 
     <script>
-        const uploadForm = document.getElementById('upload-form');
-        const saveForm = document.getElementById('save-form');
-        const stepUpload = document.getElementById('step-upload');
-        const stepForm = document.getElementById('step-form');
-        const btnUpload = document.getElementById('btn-upload');
+        $(document).ready(function(){
+            $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
 
-        let escopoData = [];
-
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('file-upload');
-            if(fileInput.files.length === 0) return;
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            btnUpload.disabled = true;
-            btnUpload.textContent = "Lendo PDF...";
-
-            try {
-                const res = await fetch('/empresas/upload', { method: 'POST', body: formData });
-                const result = await res.json();
-
-                if (result.success) {
-                    // Preencher formulário
-                    document.getElementById('razao_social').value = result.data.razao_social || '';
-                    document.getElementById('cnpj').value = result.data.cnpj || '';
-                    document.getElementById('objeto').value = result.data.objeto || '';
-                    document.getElementById('data').value = result.data.data || '';
-                    document.getElementById('filename-hidden').value = result.filename;
-                    
-                    escopoData = result.data.escopo;
-                    document.getElementById('escopo-preview').innerText = JSON.stringify(escopoData, null, 2);
-
-                    // Trocar view
-                    stepUpload.classList.add('hidden');
-                    stepForm.classList.remove('hidden');
+            // Lógica do Toggle Switch
+            $('#status-toggle').change(function() {
+                if ($(this).is(':checked')) {
+                    // Ativo
+                    $('#status-value').val('1');
+                    $('#status-label').text('Ativo');
+                    $('#data_inativacao').prop('disabled', true).addClass('bg-gray-100 cursor-not-allowed').val('');
                 } else {
-                    alert("Erro: " + result.message);
-                    btnUpload.disabled = false;
-                    btnUpload.textContent = "Processar Contrato";
+                    // Inativo
+                    $('#status-value').val('0');
+                    $('#status-label').text('Inativo');
+                    $('#data_inativacao').prop('disabled', false).removeClass('bg-gray-100 cursor-not-allowed');
                 }
-            } catch (err) {
-                alert("Erro de conexão.");
-                btnUpload.disabled = false;
-                btnUpload.textContent = "Processar Contrato";
-            }
-        });
+            });
 
-        saveForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const payload = {
-                razao_social: document.getElementById('razao_social').value,
-                cnpj: document.getElementById('cnpj').value,
-                objeto: document.getElementById('objeto').value,
-                data: document.getElementById('data').value,
-                filename: document.getElementById('filename-hidden').value,
-                escopo: escopoData
-            };
-
-            try {
-                const res = await fetch('/empresas/salvar', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                
-                if(result.success) {
-                    alert("Empresa cadastrada com sucesso!");
-                    window.location.href = "/"; // Volta para Home
+            // Lógica para mostrar nome do arquivo selecionado
+            $('#contrato-pdf').change(function() {
+                var fileName = $(this).val().split('\\').pop();
+                if (fileName) {
+                    $('#file-name-display span').text(fileName);
+                    $('#file-name-display').removeClass('hidden');
                 } else {
-                    alert("Erro ao salvar: " + result.message);
+                    $('#file-name-display').addClass('hidden');
                 }
-            } catch(err) {
-                alert("Erro de conexão ao salvar.");
-            }
+            });
         });
     </script>
 </body>

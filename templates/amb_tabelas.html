@@ -22,18 +22,18 @@
                 </div>
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="/medicos" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Médicos</a>
-                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Empresas</span>
+                    <a href="/empresas" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 text-sm">Empresas</a>
                     <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Faturamento</span>
-                    <a href="/producao" class="text-blue-600 font-bold border-b-2 border-blue-600 transition-colors px-3 py-2 text-sm">Produção</a>
+                    <a href="/producao" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 rounded-md text-sm">Produção</a>
                     <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Metas</span>
-                    <span class="text-gray-300 cursor-not-allowed font-medium px-3 py-2 rounded-md text-sm">Configurações</span>
+                    <a href="/configuracoes/usuarios" class="text-gray-600 hover:text-blue-600 font-medium transition-colors px-3 py-2 text-sm">Configurações</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto max-w-7xl p-6">
-        
+
         <div class="flex items-center gap-4 mb-6">
             <a href="/ambulatorial/visualizar" class="text-gray-500 hover:text-blue-600 font-medium flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,7 +43,7 @@
             </a>
             <h1 class="text-xl font-bold text-emerald-600">Tabela de Produção Ambulatorial</h1>
         </div>
-        
+
         <!-- Filtros -->
         <div class="bg-white rounded-lg shadow p-6 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
@@ -109,6 +109,11 @@
                 const res = await fetch('/api/ambulatorial/filtros');
                 const data = await res.json();
 
+                if (data.error) {
+                    console.error("Erro API Filtros:", data.error);
+                    return;
+                }
+
                 data.especialidades.forEach(e => {
                     const opt = document.createElement('option');
                     opt.value = e;
@@ -140,12 +145,12 @@
         function getStatusColor(valor) {
             if (valor > 25) return 'text-red-600 font-bold';
             if (valor < 20) return 'text-blue-600 font-bold';
-            return 'text-orange-500 font-bold'; 
+            return 'text-orange-500 font-bold'; // Entre 20 e 25
         }
 
         async function carregarTabela() {
             tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Buscando...</td></tr>';
-            
+
             const esp = selEsp.value;
             const mes = selMes.value;
             const ano = selAno.value;
@@ -154,6 +159,11 @@
                 const url = `/api/ambulatorial/dados?especialidade=${encodeURIComponent(esp)}&mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`;
                 const res = await fetch(url);
                 const dados = await res.json();
+
+                if (dados.error) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Erro no servidor: ${dados.error}</td></tr>`;
+                    return;
+                }
 
                 if (dados.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td></tr>';
@@ -165,7 +175,7 @@
                 dados.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-gray-50 transition';
-                    
+
                     const absClass = getStatusColor(row.taxa_absenteismo);
                     const perdaClass = getStatusColor(row.taxa_perda_primaria);
 
@@ -180,15 +190,16 @@
                     `;
                     tbody.appendChild(tr);
                 });
-                
+
                 totalDiv.innerText = `Total de registros: ${dados.length}`;
 
             } catch (error) {
                 console.error("Erro:", error);
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Erro de conexão ao carregar dados.</td></tr>';
             }
         }
 
+        // Inicializa
         carregarFiltros();
     </script>
 </body>

@@ -1,0 +1,3 @@
+﻿id;nome_completo;sexo;drt;celular;ramal;email;nivel_acesso;senha_hash;primeiro_acesso
+1;Administrador Geral;M;00000;00000;;admin@amecaragua.org.br;Gerente;scrypt:32768:8:1$UjfpvCdIDF25efTP$391060355c8638689d7ef1ab0e47da003f3d3a09d72c3c08ae3ca3cf63bb3eb87a0ce315bbd36d1e34f82d9dece506b4da41f15ae849b1cf1265a40861571783;1
+2;Saulo Bastos;M;11111;00000;;saulo.bastos@amecaragua.org.br;Gerente;scrypt:32768:8:1$ruU9r7ZYuRL8EFze$792a92f6ca4edaf7b5238b97b5a14607f04b6337869122508532bf241b1f45e6bde91dee32b4f5ef64a84d58f3c0439c84e33612f45c6f13c9f218578484ff2d;0
